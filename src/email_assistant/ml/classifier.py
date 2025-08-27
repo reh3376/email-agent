@@ -113,9 +113,7 @@ def predict(
     ]
 
 
-def save_model(
-    hv: HashingVectorizer, model: MultiHeadLinear, label_spaces: LabelSpaces, path: str
-):
+def save_model(hv: HashingVectorizer, model: MultiHeadLinear, label_spaces: LabelSpaces, path: str):
     torch.save(
         {
             "vectorizer": hv.save(),
