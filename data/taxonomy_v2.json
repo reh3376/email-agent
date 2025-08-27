@@ -5,6 +5,7 @@
     {
       "id": 0,
       "name": "reviewed",
+      "review_count": 1,
       "required": true,
       "labels": ["reviewed"]
     },

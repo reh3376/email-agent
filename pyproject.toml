@@ -8,38 +8,240 @@ version = "0.1.0"
 description = "Desktop Email Assistant — local API + JSON stores + embedded graph + classifier"
 requires-python = ">=3.11"
 readme = "README.md"
-authors = [{name="You", email="you@example.com"}]
+authors = [{name="reh3376", email="reh3376@users.noreply.github.com"}]
 license = {text = "MIT"}
-
+keywords = ["email", "assistant", "classification", "machine-learning", "fastapi", "privacy", "local"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Communications :: Email",
+  "Topic :: Office/Business",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
+  # Core API and Web Framework
   "fastapi>=0.110",
   "uvicorn>=0.29",
   "pydantic>=2.6",
-  "pandas>=2.2",
-  "torch>=2.2",
   "python-multipart>=0.0.9",
+  
+  # Data Processing and Storage
+  "pandas>=2.2",
   "orjson>=3.10",
   "pyoxigraph>=0.3.19",
-  "ujson>=5.9",
+  
+  # Machine Learning and Scientific Computing
+  "torch>=2.2",
+  "numpy>=1.24",
+  "scikit-learn>=1.3",
+  
+  # Configuration and Validation
+  "python-dotenv>=1.0",
+  "jsonschema>=4.17",
+  
+  # HTTP and Communication
   "httpx>=0.27",
+  "requests>=2.28",
+  
+  # Email Processing (IMAP/SMTP)
+  "imapclient>=2.3",
+  "email-validator>=2.0",
+  
+  # Calendar and Time Processing
+  "python-dateutil>=2.8",
+  "pytz>=2023.3",
+  "icalendar>=5.0",
+  
+  # CLI Interface
   "typer>=0.12",
+  "rich>=13.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/reh3376/email-agent"
+Repository = "https://github.com/reh3376/email-agent.git"
+Issues = "https://github.com/reh3376/email-agent/issues"
+Documentation = "https://github.com/reh3376/email-agent#readme"
+
+[project.scripts]
+email-assistant = "email_assistant.cli:main"
+train-classifier = "email_assistant.scripts.train_classifier:main"
 
 [project.optional-dependencies]
 dev = [
+  # Linting and Formatting  
   "ruff>=0.5",
+  "mypy>=1.5",
+  "types-requests>=2.28",
+  
+  # Testing
   "pytest>=8.2",
   "pytest-cov>=5.0",
+  "pytest-asyncio>=0.21",
   "anyio>=4.4",
-  "requests>=2.32",
+  "httpx>=0.27",  # For testing HTTP endpoints
+  
+  # Development Tools
+  "pre-commit>=3.0",
+  "ipython>=8.10",
+  "jupyter>=1.0",
+]
+
+# Optional integrations that can be installed separately
+google = [
+  "google-auth>=2.17",
+  "google-auth-oauthlib>=1.0",
+  "google-auth-httplib2>=0.2",
+  "google-api-python-client>=2.100",
+]
+
+microsoft = [
+  "msgraph-core>=0.2.2",
+  "msal>=1.20",
+  "azure-identity>=1.12",
+]
+
+exchange = [
+  "exchangelib>=5.0",
+]
+
+all = [
+  # Include all optional dependencies
+  "email-assistant[google,microsoft,exchange]",
 ]
 
 [tool.ruff]
+# IMPORTANT: Ruff ONLY checks Python files (.py, .pyi)
+# The MD036 error you see is from a different markdown linter (not Ruff)
+# To disable markdown linting in your IDE, check .markdownlint.json
+
+# Line length configuration:
+# - line-length: Maximum allowed line length (hard limit for E501)
+# - Lines exceeding this limit will trigger E501 errors
 line-length = 100
-select = ["E","F","I","UP","W","B"]
-ignore = []
 target-version = "py311"
+# Only check Python files - explicitly exclude everything else
+include = ["*.py", "*.pyi", "**/*.py", "**/*.pyi"]
+extend-exclude = [
+  # Documentation files - NEVER lint these
+  "*.md",
+  "*.txt",
+  "*.rst",
+  "*.json",
+  "*.markdown",
+  "**/*.md",
+  "**/*.txt",
+  "**/*.rst",
+  "**/*.markdown",
+  
+  # Documentation directories  
+  "docs/",
+  "documentation/",
+  "**/docs/",
+  "**/documentation/",
+  
+  # Archive and build artifacts
+  "archieve/",
+  "dist/",
+  "build/",
+  "*.egg-info/",
+  
+  # Virtual environments and caches
+  ".venv/",
+  "venv/",
+  ".env/",
+  "env/",
+  "__pycache__/",
+  ".ruff_cache/",
+  ".pytest_cache/",
+  ".mypy_cache/",
+  
+  # Version control
+  ".git/",
+  
+  # IDE and editor files
+  ".vscode/",
+  ".idea/",
+  "*.swp",
+  "*.swo",
+  "*~",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings  
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "TCH", # flake8-type-checking
+]
+ignore = []
+
+[tool.ruff.lint.pycodestyle]
+# Pycodestyle-specific settings
+# max-line-length: Maximum line length for pycodestyle rules (E501)
+max-line-length = 100
+
+[tool.ruff.lint.isort]
+known-first-party = ["email_assistant"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+  "--cov=src/email_assistant",
+  "--cov-report=term-missing",
+  "--cov-report=html",
+  "--cov-fail-under=80",
+  "-v",
+]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["src/email_assistant"]
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+
+[tool.coverage.run]
+source = ["src/email_assistant"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
+]

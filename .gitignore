@@ -1,12 +1,79 @@
 
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Virtual environments
 .venv/
+venv/
+.env/
+env/
+.virtualenv
+
+# Environment files
 .env
+.env.local
+.env.*.local
+
+# Database files  
 *.sqlite
 *.db
+
+# Build artifacts
 dist/
 build/
+*.egg
+
+# Lock files and logs
 *.lock
 *.log
+uv.lock
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Linting and formatting
+.ruff_cache/
+.mypy_cache/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Local configuration
+app.config.local.json
+config.local.json
+
+# Temporary files
+*.tmp
+*.bak
+*.orig

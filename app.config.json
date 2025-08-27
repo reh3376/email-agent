@@ -1,0 +1,29 @@
+{
+  "stores": {
+    "root": "data/",
+    "taxonomy": "data/taxonomy_v2.json",
+    "ruleset": "data/ruleset_v2.json",
+    "contacts": "data/contacts.json",
+    "decisions": "data/decisions/"
+  },
+  "graphdb": {
+    "type": "oxigraph",
+    "dataDir": "data/graph/"
+  },
+  "api": {
+    "host": "127.0.0.1",
+    "port": 8765,
+    "reload": false
+  },
+  "ml": {
+    "model_path": "src/email_assistant/models/classifier.pt",
+    "n_features": 262144,
+    "epochs": 3,
+    "learning_rate": 0.5
+  },
+  "timezone": "America/Kentucky/Louisville",
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

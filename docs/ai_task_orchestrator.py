@@ -891,6 +891,11 @@ class AITaskOrchestrator:
             "redis_recent": []
         }
 
+        # Return empty insights if memory coordinator not available
+        if not self.memory_coordinator:
+            logger.debug("Memory coordinator not available, returning empty insights")
+            return insights
+
         try:
             # Query each database for relevant insights
             neo4j_results = await self.memory_coordinator.query_memory(
@@ -906,11 +911,19 @@ class AITaskOrchestrator:
             )
             insights["qdrant_similar"] = qdrant_results.get("results", [])[:5]
 
+            # Return insights with actual data
             return insights
 
         except Exception as e:
             logger.warning(f"Failed to get memory insights: {e}")
-            return insights
+            # Return empty insights on error
+            return {
+                "neo4j_patterns": [],
+                "qdrant_similar": [],
+                "postgresql_history": [],
+                "redis_recent": [],
+                "error": str(e)
+            }
 
     def _extract_keywords(self, text: str) -> List[str]:
         """Extract relevant keywords from text."""
@@ -1355,33 +1368,7 @@ class AITaskOrchestrator:
         result = {"status": "pass", "details": [], "score": 100}
 
         code_lower = code_content.lower()
-        missing_requirements = []
-
-        for req in requirements:
-            req_lower = req.lower()
-
-            # Check for specific requirement patterns
-            if "error handling" in req_lower:
-                if not any(pattern in code_lower for pattern in ["try:", "except:", "raise", "error", "exception"]):
-                    missing_requirements.append("Error handling not implemented")
-
-            elif "test" in req_lower:
-                if not any(pattern in code_lower for pattern in ["test_", "assert", "unittest", "pytest"]):
-                    missing_requirements.append("Testing not implemented")
-
-            elif "documentation" in req_lower:
-                if not any(pattern in code_lower for pattern in ['"""', "'''", "# "]):
-                    missing_requirements.append("Documentation not found")
-
-            elif "format" in req_lower:
-                formats = re.findall(r'\b(L5X|ACD|JSON|XML|CSV)\b', req, re.IGNORECASE)
-                for fmt in formats:
-                    if fmt.lower() not in code_lower:
-                        missing_requirements.append(f"Support for {fmt} format not found")
-
-            elif "production" in req_lower:
-                if not any(pattern in code_lower for pattern in ["logging", "monitor", "metric", "health"]):
-                    missing_requirements.append("Production features not implemented")
+        missing_requirements = self._check_all_requirements(code_lower, requirements)
 
         if missing_requirements:
             result["status"] = "fail"
@@ -1391,6 +1378,70 @@ class AITaskOrchestrator:
             result["details"].append("All requirements appear to be addressed")
 
         return result
+
+    def _check_all_requirements(self, code_lower: str, requirements: List[str]) -> List[str]:
+        """Check all requirements and return list of missing ones."""
+        missing_requirements = []
+        
+        # Define requirement checkers
+        checkers = [
+            ("error handling", self._check_error_handling),
+            ("test", self._check_testing),
+            ("documentation", self._check_documentation),
+            ("production", self._check_production_features)
+        ]
+        
+        for req in requirements:
+            req_lower = req.lower()
+            
+            # Check standard requirements
+            for keyword, checker in checkers:
+                if keyword in req_lower:
+                    missing_requirements.extend(checker(code_lower))
+                    break
+            
+            # Special handling for format requirements
+            if "format" in req_lower:
+                missing_requirements.extend(self._check_format_support(code_lower, req))
+        
+        return missing_requirements
+
+    def _check_error_handling(self, code_lower: str) -> List[str]:
+        """Check if error handling is implemented."""
+        patterns = ["try:", "except:", "raise", "error", "exception"]
+        if not any(pattern in code_lower for pattern in patterns):
+            return ["Error handling not implemented"]
+        return []
+
+    def _check_testing(self, code_lower: str) -> List[str]:
+        """Check if testing is implemented."""
+        patterns = ["test_", "assert", "unittest", "pytest"]
+        if not any(pattern in code_lower for pattern in patterns):
+            return ["Testing not implemented"]
+        return []
+
+    def _check_documentation(self, code_lower: str) -> List[str]:
+        """Check if documentation is present."""
+        patterns = ['"""', "'''", "# "]
+        if not any(pattern in code_lower for pattern in patterns):
+            return ["Documentation not found"]
+        return []
+
+    def _check_format_support(self, code_lower: str, requirement: str) -> List[str]:
+        """Check if required formats are supported."""
+        missing = []
+        formats = re.findall(r'\b(L5X|ACD|JSON|XML|CSV)\b', requirement, re.IGNORECASE)
+        for fmt in formats:
+            if fmt.lower() not in code_lower:
+                missing.append(f"Support for {fmt} format not found")
+        return missing
+
+    def _check_production_features(self, code_lower: str) -> List[str]:
+        """Check if production features are implemented."""
+        patterns = ["logging", "monitor", "metric", "health"]
+        if not any(pattern in code_lower for pattern in patterns):
+            return ["Production features not implemented"]
+        return []
 
     def _validate_mathematical_accuracy(self, code_content: str) -> Dict[str, Any]:
         """Validate mathematical implementations"""

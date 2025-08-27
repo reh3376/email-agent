@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
+
 from email_assistant.api.main import app
+
 
 def test_api_smoke():
     client = TestClient(app)

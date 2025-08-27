@@ -4,11 +4,19 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A privacy-focused, offline-first desktop email assistant that runs locally and provides intelligent email processing through a FastAPI-based service. The assistant classifies emails, applies rule-based actions, manages contacts, and integrates with calendars—all while keeping your data completely local.
+A privacy-focused, offline-first desktop email assistant that runs locally and
+provides intelligent email processing through a FastAPI-based service.
+The assistant classifies emails, applies rule-based actions, manages contacts,
+and integrates with calendars—all while keeping your data completely local.
+User / Application settings allow user to define email addresses, calendars,
+and file systems. As well as control classification categories, conditional
+actions, agent based actions, and level of email agents involvement and
+learning capacity.
 
 ## 🚀 Quick Start
 
-> **Requirements:** Python 3.11+ and [UV](https://github.com/astral-sh/uv) package manager
+> **Requirements:** Python 3.11+ and [UV](https://github.com/astral-sh/uv)
+> package manager
 
 ```bash
 # 1. Clone and navigate to the repository
@@ -29,23 +37,26 @@ uv run python scripts/run_api.py
 uv run python scripts/train_classifier.py --data data/decisions --out src/email_assistant/models/classifier.pt
 ```
 
-The API will be available at `http://127.0.0.1:8765` with interactive documentation at `http://127.0.0.1:8765/docs`.
+The API will be available at `http://127.0.0.1:8765` with interactive
+documentation at `http://127.0.0.1:8765/docs`.
 
 ## 🏗️ Architecture Overview
 
 The Email Assistant is built with a modular architecture centered around:
 
 - **🔌 FastAPI Service** - Local REST API (port 8765) with OpenAPI 3.1 specification
-- **📊 JSON-based Storage** - Governed JSON files with schema validation for configuration and data
+- **📊 JSON-based Storage** - Governed JSON files with schema validation for
+  configuration and data
 - **🧠 Hybrid Classification** - Local PyTorch classifier + fine-tuned LLM integration
 - **📈 Graph Database** - Embedded Oxigraph for relationship tracking and audit trails
 - **🔄 Rule Engine** - Flexible DSL for email processing automation
-- **🗓️ Calendar Integration** - Google Calendar and Outlook support with conflict detection
+- **🗓️ Calendar Integration** - Google Calendar and Outlook support with
+  conflict detection
 - **🤖 MCP Integration** - Model Context Protocol support for AI agent interactions
 
 ### Key Components
 
-```
+```text
 src/email_assistant/
 ├── api/                 # FastAPI routes and endpoints
 ├── ml/                  # Machine learning models and vectorization
@@ -70,13 +81,17 @@ schemas/                # JSON Schema definitions
 
 The assistant uses a **5-category classification taxonomy** that's fully customizable:
 
-| Category               | Purpose          | Example Labels                                          |
-| ---------------------- | ---------------- | ------------------------------------------------------- |
-| **0. Reviewed**        | Control/tracking | `reviewed`                                              |
-| **1. Type**            | Email purpose    | `work/WhiskeyHouse`, `personal`, `professional`         |
-| **2. Sender Identity** | Who sent it      | `friend`, `co-worker`, `vendor`, `marketer`             |
-| **3. Context**         | What it's about  | `meeting request`, `information request`, `promotional` |
-| **4. Handler**         | Action needed    | `user action required`, `no action required`            |
+| Category        | Purpose    | Example Labels                       |
+| --------------- | ---------- | ------------------------------------ |
+| **0. Reviewed** | Control    | `reviewed`                           |
+| **1. Type**     | Email type | `work/WhiskeyHouse`, `personal`,     |
+|                 |            | `professional`                       |
+| **2. Sender**   | Who sent   | `friend`, `co-worker`, `vendor`,     |
+| **Identity**    | it         | `marketer`                           |
+| **3. Context**  | What it's  | `meeting request`,                   |
+|                 | about      | `information request`, `promotional` |
+| **4. Handler**  | Action     | `user action required`,              |
+|                 | needed     | `no action required`                 |
 
 ## ⚙️ Configuration & Data Files
 
@@ -142,7 +157,8 @@ response = httpx.post("http://127.0.0.1:8765/ml/classify", json={
 
 classification = response.json()
 print(classification["classification"])
-# Output: {"category1_type": "work", "category3_context": "request for meeting", ...}
+# Output: {"category1_type": "work",
+#          "category3_context": "request for meeting", ...}
 ```
 
 ## 🧠 Machine Learning Pipeline
@@ -184,7 +200,8 @@ The classifier uses:
 
 ### Conflict Detection
 
-The assistant automatically checks for calendar conflicts when processing meeting requests:
+The assistant automatically checks for calendar conflicts when processing
+meeting requests:
 
 ```json
 {
@@ -227,8 +244,8 @@ uv run ruff format .
 
 ### Project Structure
 
-```
-email-agent/
+```text
+  email-agent/
 ├── src/email_assistant/     # Main application code
 │   ├── api/                 # FastAPI routes and endpoints
 │   ├── ml/                  # Machine learning components
@@ -369,7 +386,8 @@ curl -X GET "http://127.0.0.1:8765/graph/query" \
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE)
+file for details.
 
 ## 🔗 Links
 
