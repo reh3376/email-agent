@@ -160,7 +160,10 @@ def test_classification():
     # Test email
     email = {
         "subject": "Urgent: Project deadline tomorrow",
-        "body": "Hi team, just a reminder that our project deadline is tomorrow at 5 PM. Please make sure all deliverables are ready.",
+        "body": (
+            "Hi team, just a reminder that our project deadline is tomorrow at 5 PM. "
+            "Please make sure all deliverables are ready."
+        ),
         "from": "john.doe@company.com",
         "to": ["team@company.com"],
     }

@@ -31,7 +31,9 @@ def test_decision_with_review_tracking():
                     "mimeType": "application/pdf",
                     "size": 2048576,
                     "storagePath": "/data/attachments/2025-08-27/msg-12345/Q4_Report.pdf",
-                    "sha256Hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "sha256Hash": (
+                        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    ),
                 }
             ],
             "attachmentCount": 1,
@@ -167,13 +169,15 @@ def main():
         if resp.status_code != 200:
             print("❌ API is not responding correctly")
             print(
-                "   Please ensure the API is running: uv run uvicorn email_assistant.api.main:app --host 127.0.0.1 --port 8765"
+                "   Please ensure the API is running: "
+                "uv run uvicorn email_assistant.api.main:app --host 127.0.0.1 --port 8765"
             )
             sys.exit(1)
     except requests.exceptions.ConnectionError:
         print("❌ Cannot connect to API at", BASE_URL)
         print(
-            "   Please ensure the API is running: uv run uvicorn email_assistant.api.main:app --host 127.0.0.1 --port 8765"
+            "   Please ensure the API is running: "
+            "uv run uvicorn email_assistant.api.main:app --host 127.0.0.1 --port 8765"
         )
         sys.exit(1)
 

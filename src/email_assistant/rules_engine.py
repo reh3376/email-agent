@@ -163,7 +163,7 @@ class RulesEngine:
         """Compare values with type handling."""
         try:
             # Try numeric comparison
-            if isinstance(value, (int, float)) and isinstance(expected, (int, float)):
+            if isinstance(value, int | float) and isinstance(expected, int | float):
                 return comparator(value, expected)
 
             # Try string comparison

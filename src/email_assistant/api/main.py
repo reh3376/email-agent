@@ -201,7 +201,7 @@ def record_decision(decision: Decision):
         decisions_store.append(data)
         return decision
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to record decision: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to record decision: {str(e)}") from e
 
 
 @app.get("/decisions/{id}", response_model=Decision)
@@ -219,7 +219,7 @@ def get_decision_by_id(id: str = Path(..., description="Decision ID")):
 def get_taxonomy_versions():
     """List taxonomy versions."""
     versions = []
-    for key, taxonomy in taxonomy_versions.items():
+    for key, _taxonomy in taxonomy_versions.items():
         version, created = key.split("_", 1)
         versions.append(
             VersionInfo(
@@ -248,7 +248,7 @@ def create_taxonomy_version(taxonomy: Taxonomy):
 def get_rules_versions():
     """List ruleset versions."""
     versions = []
-    for key, ruleset in rules_versions.items():
+    for key, _ruleset in rules_versions.items():
         version, created = key.split("_", 1)
         versions.append(
             VersionInfo(
@@ -283,7 +283,7 @@ def get_scheduler_preview(
         next_runs = scheduler.get_next_runs(schedule, count)
         return SchedulePreview(schedule=schedule, nextRuns=next_runs)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/learn/feedback", response_model=FeedbackResponse)
@@ -397,7 +397,7 @@ def graph_ingest(request: GraphIngestRequest):
     for triple in triples:
         try:
             # Validate triple structure
-            if not isinstance(triple, (list, tuple)) or len(triple) != 3:
+            if not isinstance(triple, list | tuple) or len(triple) != 3:
                 errors.append(f"Invalid triple format: {triple}")
                 continue
 
