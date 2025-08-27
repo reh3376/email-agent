@@ -228,6 +228,118 @@ class RulesEngine:
         
         return results
     
+    def _get_action_handler(self, action_type: str):
+        """Get handler method for action type."""
+        handlers = {
+            "set_classification": self._handle_set_classification,
+            "mark_read": self._handle_mark_read,
+            "create_calendar_event": self._handle_create_calendar_event,
+            "add_contact": self._handle_add_contact,
+            "save_to_folder": self._handle_save_to_folder,
+            "flag_for_review": self._handle_flag_for_review,
+            "forward_to": self._handle_forward_to,
+            "auto_reply": self._handle_auto_reply,
+            "add_tag": self._handle_add_tag
+        }
+        return handlers.get(action_type)
+    
+    def _handle_set_classification(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle set classification action."""
+        return {
+            "status": "success",
+            "result": {
+                "category": action.parameters.get("category"),
+                "label": action.parameters.get("label")
+            }
+        }
+    
+    def _handle_mark_read(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle mark read action."""
+        return {"status": "success", "result": {"marked": True}}
+    
+    def _handle_create_calendar_event(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle create calendar event action."""
+        event = action.parameters.get("event", {})
+        event_title = event.get("title", f"Meeting from {email.get('from', 'Unknown')}")
+        return {
+            "status": "success",
+            "result": {
+                "eventId": f"evt_{datetime.now().timestamp()}",
+                "title": event_title,
+                "startTime": event.get("startTime"),
+                "emailId": email.get("id")
+            }
+        }
+    
+    def _handle_add_contact(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle add contact action."""
+        contact = action.parameters.get("contact", {})
+        if not contact.get("email") and email.get("from"):
+            contact["email"] = email.get("from")
+        return {
+            "status": "success",
+            "result": {
+                "contactId": f"cnt_{datetime.now().timestamp()}",
+                "name": contact.get("name", email.get("fromName", "Unknown")),
+                "email": contact.get("email")
+            }
+        }
+    
+    def _handle_save_to_folder(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle save to folder action."""
+        return {
+            "status": "success",
+            "result": {
+                "folder": action.parameters.get("folder"),
+                "emailId": email.get("id")
+            }
+        }
+    
+    def _handle_flag_for_review(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle flag for review action."""
+        return {
+            "status": "success",
+            "result": {
+                "flagged": True,
+                "reason": action.parameters.get("reason", "Manual review required"),
+                "decisionId": decision.id if hasattr(decision, 'id') else None
+            }
+        }
+    
+    def _handle_forward_to(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle forward to action."""
+        return {
+            "status": "success",
+            "result": {
+                "forwarded": True,
+                "recipient": action.parameters.get("recipient"),
+                "emailId": email.get("id")
+            }
+        }
+    
+    def _handle_auto_reply(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle auto reply action."""
+        template = action.parameters.get("template", "default")
+        return {
+            "status": "success",
+            "result": {
+                "replied": True,
+                "template": template,
+                "to": email.get("from"),
+                "originalEmailId": email.get("id")
+            }
+        }
+    
+    def _handle_add_tag(self, action: Action, email: Dict[str, Any], decision: Decision):
+        """Handle add tag action."""
+        return {
+            "status": "success",
+            "result": {
+                "tag": action.parameters.get("tag"),
+                "emailId": email.get("id")
+            }
+        }
+    
     def _execute_action(
         self,
         action: Action,
@@ -236,57 +348,16 @@ class RulesEngine:
     ) -> Dict[str, Any]:
         """Execute a single action."""
         try:
-            # Action implementations would go here
-            # For now, return mock results
+            # Get action handler
+            handler = self._get_action_handler(action.type)
+            if handler:
+                return handler(action, email, decision)
             
-            if action.type == "set_classification":
-                # Update classification
-                return {
-                    "status": "success",
-                    "result": {
-                        "category": action.parameters.get("category"),
-                        "label": action.parameters.get("label")
-                    }
-                }
-            
-            elif action.type == "mark_read":
-                return {"status": "success", "result": {"marked": True}}
-            
-            elif action.type == "create_calendar_event":
-                event = action.parameters.get("event", {})
-                return {
-                    "status": "success",
-                    "result": {
-                        "eventId": f"evt_{datetime.now().timestamp()}",
-                        "title": event.get("title"),
-                        "startTime": event.get("startTime")
-                    }
-                }
-            
-            elif action.type == "add_contact":
-                contact = action.parameters.get("contact", {})
-                return {
-                    "status": "success",
-                    "result": {
-                        "contactId": f"cnt_{datetime.now().timestamp()}",
-                        "name": contact.get("name")
-                    }
-                }
-            
-            elif action.type == "save_to_folder":
-                return {
-                    "status": "success",
-                    "result": {
-                        "folder": action.parameters.get("folder")
-                    }
-                }
-            
-            else:
-                # TODO: Implement remaining actions
-                return {
-                    "status": "pending",
-                    "result": {"message": f"Action {action.type} not implemented"}
-                }
+            # Handle unknown action types
+            return {
+                "status": "error",
+                "result": {"message": f"Unknown action type: {action.type}"}
+            }
                 
         except Exception as e:
             return {

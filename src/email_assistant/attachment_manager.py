@@ -204,49 +204,68 @@ class AttachmentManager:
         Returns:
             Attachment storage statistics
         """
-        total_files = 0
-        total_size = 0
-        oldest_time = None
-        newest_time = None
-        by_mime_type: Dict[str, int] = {}
-        by_message_id: Dict[str, int] = {}
+        stats_data = {
+            "total_files": 0,
+            "total_size": 0,
+            "oldest_time": None,
+            "newest_time": None,
+            "by_mime_type": {},
+            "by_message_id": {}
+        }
         
         for date_dir in self.base_path.glob(DATE_DIR_PATTERN):
-            for message_dir in date_dir.iterdir():
-                if message_dir.is_dir():
-                    message_id = message_dir.name
-                    message_file_count = 0
-                    
-                    for file_path in message_dir.iterdir():
-                        if file_path.is_file():
-                            total_files += 1
-                            message_file_count += 1
-                            stat = file_path.stat()
-                            total_size += stat.st_size
-                            
-                            # Track oldest/newest
-                            mtime = datetime.fromtimestamp(stat.st_mtime)
-                            if oldest_time is None or mtime < oldest_time:
-                                oldest_time = mtime
-                            if newest_time is None or mtime > newest_time:
-                                newest_time = mtime
-                            
-                            # Guess MIME type from extension
-                            ext = file_path.suffix.lower()
-                            mime_type = self._guess_mime_type(ext)
-                            by_mime_type[mime_type] = by_mime_type.get(mime_type, 0) + 1
-                    
-                    if message_file_count > 0:
-                        by_message_id[message_id] = message_file_count
+            self._process_date_directory(date_dir, stats_data)
         
         return AttachmentStats(
-            totalFiles=total_files,
-            totalSizeBytes=total_size,
-            oldestFile=oldest_time,
-            newestFile=newest_time,
-            byMimeType=by_mime_type,
-            byMessageId=by_message_id
+            totalFiles=stats_data["total_files"],
+            totalSizeBytes=stats_data["total_size"],
+            oldestFile=stats_data["oldest_time"],
+            newestFile=stats_data["newest_time"],
+            byMimeType=stats_data["by_mime_type"],
+            byMessageId=stats_data["by_message_id"]
         )
+    
+    def _process_date_directory(self, date_dir: Path, stats_data: dict) -> None:
+        """Process a single date directory for stats."""
+        for message_dir in date_dir.iterdir():
+            if message_dir.is_dir():
+                self._process_message_directory(message_dir, stats_data)
+    
+    def _process_message_directory(self, message_dir: Path, stats_data: dict) -> None:
+        """Process a single message directory for stats."""
+        message_id = message_dir.name
+        message_file_count = 0
+        
+        for file_path in message_dir.iterdir():
+            if file_path.is_file():
+                message_file_count += self._process_attachment_file(file_path, stats_data)
+        
+        if message_file_count > 0:
+            stats_data["by_message_id"][message_id] = message_file_count
+    
+    def _process_attachment_file(self, file_path: Path, stats_data: dict) -> int:
+        """Process a single attachment file for stats. Returns 1 if file processed."""
+        stats_data["total_files"] += 1
+        stat = file_path.stat()
+        stats_data["total_size"] += stat.st_size
+        
+        # Update oldest/newest times
+        mtime = datetime.fromtimestamp(stat.st_mtime)
+        self._update_time_bounds(mtime, stats_data)
+        
+        # Update MIME type count
+        ext = file_path.suffix.lower()
+        mime_type = self._guess_mime_type(ext)
+        stats_data["by_mime_type"][mime_type] = stats_data["by_mime_type"].get(mime_type, 0) + 1
+        
+        return 1
+    
+    def _update_time_bounds(self, mtime: datetime, stats_data: dict) -> None:
+        """Update oldest and newest timestamps."""
+        if stats_data["oldest_time"] is None or mtime < stats_data["oldest_time"]:
+            stats_data["oldest_time"] = mtime
+        if stats_data["newest_time"] is None or mtime > stats_data["newest_time"]:
+            stats_data["newest_time"] = mtime
     
     def cleanup_old_attachments(self) -> int:
         """
@@ -275,15 +294,32 @@ class AttachmentManager:
         """Find existing file by hash (for deduplication)."""
         # For now, simple implementation - could be optimized with a hash index
         for date_dir in self.base_path.glob(DATE_DIR_PATTERN):
-            for message_dir in date_dir.iterdir():
-                if message_dir.is_dir():
-                    for file_path in message_dir.iterdir():
-                        if file_path.is_file():
-                            # Calculate hash of existing file
-                            file_hash = hashlib.sha256(file_path.read_bytes()).hexdigest()
-                            if file_hash == sha256_hash:
-                                return file_path
+            found = self._search_hash_in_date_dir(date_dir, sha256_hash)
+            if found:
+                return found
         return None
+    
+    def _search_hash_in_date_dir(self, date_dir: Path, target_hash: str) -> Optional[Path]:
+        """Search for hash in a specific date directory."""
+        for message_dir in date_dir.iterdir():
+            if not message_dir.is_dir():
+                continue
+            found = self._search_hash_in_message_dir(message_dir, target_hash)
+            if found:
+                return found
+        return None
+    
+    def _search_hash_in_message_dir(self, message_dir: Path, target_hash: str) -> Optional[Path]:
+        """Search for hash in a specific message directory."""
+        for file_path in message_dir.iterdir():
+            if file_path.is_file() and self._file_matches_hash(file_path, target_hash):
+                return file_path
+        return None
+    
+    def _file_matches_hash(self, file_path: Path, target_hash: str) -> bool:
+        """Check if file matches the target hash."""
+        file_hash = hashlib.sha256(file_path.read_bytes()).hexdigest()
+        return file_hash == target_hash
     
     def _guess_mime_type(self, extension: str) -> str:
         """Guess MIME type from file extension."""

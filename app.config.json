@@ -298,7 +298,7 @@
     "imap": {
       "enabled": false,
       "settings": {
-        "host": "${IMAP_HOST}",
+        "host": "imap.example.com",
         "port": 993,
         "secure": true,
         "username": "${IMAP_USERNAME}",
@@ -514,13 +514,13 @@
   "integrations": {
     "slack": {
       "enabled": false,
-      "webhookUrl": "${SLACK_WEBHOOK_URL}",
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
       "channel": "#email-assistant",
       "username": "Email Assistant"
     },
     "teams": {
       "enabled": false,
-      "webhookUrl": "${TEAMS_WEBHOOK_URL}"
+      "webhookUrl": "https://outlook.office.com/webhook/YOUR-WEBHOOK-URL"
     },
     "zapier": {
       "enabled": false,
@@ -545,7 +545,7 @@
     },
     "telemetry": {
       "enabled": false,
-      "endpoint": "${TELEMETRY_ENDPOINT}",
+      "endpoint": "https://telemetry.example.com/api/v1/events",
       "apiKey": "${TELEMETRY_API_KEY}",
       "sampleRate": 0.1
     },

@@ -14,6 +14,10 @@
     "timezone"
   ],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path to the JSON schema file for validation"
+    },
     "version": {
       "type": "string",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
