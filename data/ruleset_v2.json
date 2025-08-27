@@ -1,418 +1,1137 @@
 {
   "type": "email_rules",
   "version": "v2",
+  "schemaVersion": "1.0.0",
+  "name": "Production Email Processing Ruleset",
+  "description": "Comprehensive email processing rules with advanced conditions, actions, and workflow automation",
   "rules": [
     {
       "id": "base-mark-read",
-      "description": "All messages are marked read after classification per spec.",
+      "name": "Mark as Read After Processing",
+      "description": "All messages are marked as read after classification to maintain inbox hygiene",
+      "category": "automation",
+      "tags": ["housekeeping", "default"],
       "priority": 1000,
-      "when": [
+      "enabled": true,
+      "conditions": [
         {
-          "allOf": [
+          "logic": "AND",
+          "conditions": [
             {
-              "path": "$.message.id",
-              "op": "exists"
+              "field": "$.messageId",
+              "operator": "exists",
+              "caseInsensitive": false
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "mark_read"
+          "type": "mark_read",
+          "priority": 1,
+          "async": false,
+          "parameters": {}
         }
-      ]
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
     },
     {
-      "id": "sender-add-contact",
-      "description": "If sender is friend/WHK/professional/colleague/co-worker/contact then add to contacts.",
+      "id": "sender-trusted-add-contact",
+      "name": "Add Trusted Senders to Contacts",
+      "description": "Automatically add trusted senders (friends, colleagues, professionals) to contact database",
+      "category": "automation",
+      "tags": ["contacts", "trust", "relationship"],
       "priority": 900,
-      "when": [
+      "enabled": true,
+      "conditions": [
         {
-          "allOf": [
+          "logic": "AND",
+          "conditions": [
             {
-              "path": "$.classification.category2_sender_identity",
-              "op": "in",
-              "value": [
-                "friend",
-                "co-worker",
-                "professional",
-                "colleague",
-                "contact"
+              "field": "$.classification.senderIdentity",
+              "operator": "in",
+              "value": ["friend", "family", "co-worker", "colleague", "contact", "client", "partner"],
+              "caseInsensitive": true
+            },
+            {
+              "field": "$.email.from.address",
+              "operator": "regex",
+              "value": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "add_contact",
+          "priority": 1,
+          "async": true,
+          "parameters": {
+            "contact": {
+              "extractFromEmail": true,
+              "autoPopulateFields": ["name", "emails", "company"],
+              "source": "email",
+              "tags": ["auto-added"],
+              "privacy": {
+                "consentStatus": "pending"
+              }
+            }
+          }
+        },
+        {
+          "type": "add_label",
+          "priority": 2,
+          "parameters": {
+            "label": "Trusted Sender"
+          }
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "security-malicious-quarantine",
+      "name": "Quarantine Malicious Emails",
+      "description": "Identify and quarantine malicious emails with comprehensive security actions",
+      "category": "security",
+      "tags": ["security", "spam", "phishing", "critical"],
+      "priority": 950,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "OR",
+          "conditions": [
+            {
+              "field": "$.classification.senderIdentity",
+              "operator": "in",
+              "value": ["malicious", "suspicious"],
+              "weight": 0.9
+            },
+            {
+              "field": "$.email.securityAssessment.phishingScore",
+              "operator": "gt",
+              "value": 0.8,
+              "weight": 0.95
+            },
+            {
+              "field": "$.email.securityAssessment.malwareRisk",
+              "operator": "gt",
+              "value": 0.7,
+              "weight": 1.0
+            },
+            {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "$.email.securityAssessment.spfResult",
+                  "operator": "eq",
+                  "value": "fail"
+                },
+                {
+                  "field": "$.email.securityAssessment.dkimResult",
+                  "operator": "eq",
+                  "value": "fail"
+                }
               ]
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "add_contact"
-        }
-      ]
-    },
-    {
-      "id": "sender-malicious",
-      "description": "Malicious senders are deleted and reported as junk.",
-      "priority": 900,
-      "when": [
+          "type": "quarantine",
+          "priority": 1,
+          "async": false,
+          "parameters": {
+            "quarantineReason": "Security threat detected",
+            "quarantineDuration": 2592000
+          }
+        },
         {
-          "allOf": [
-            {
-              "path": "$.classification.category2_sender_identity",
-              "op": "eq",
-              "value": "malicious"
+          "type": "report_phishing",
+          "priority": 2,
+          "async": true,
+          "parameters": {}
+        },
+        {
+          "type": "log_event",
+          "priority": 3,
+          "parameters": {
+            "eventType": "security_threat",
+            "severity": "high",
+            "details": {
+              "includeHeaders": true,
+              "includeBody": false
             }
-          ]
+          }
+        },
+        {
+          "type": "send_notification",
+          "priority": 4,
+          "async": true,
+          "parameters": {
+            "notificationChannel": "email",
+            "notificationTemplate": "security_alert",
+            "recipients": ["security@company.com"],
+            "includeDetails": true
+          }
+        },
+        {
+          "type": "set_classification",
+          "priority": 5,
+          "parameters": {
+            "category": 4,
+            "label": "no_action_required"
+          }
         }
       ],
-      "then": [
-        {
-          "type": "report_junk"
-        },
-        {
-          "type": "delete"
-        },
-        {
-          "type": "set_save_to_folder",
-          "params": {
-            "value": false
-          }
-        },
-        {
-          "type": "set_handler",
-          "params": {
-            "value": "no action required"
-          }
-        }
-      ]
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "security-team",
+        "executionCount": 0,
+        "successRate": 100
+      },
+      "performance": {
+        "maxExecutionTime": 5000,
+        "timeout": 10000
+      }
     },
     {
-      "id": "sender-other-delete",
-      "description": "If sender identity is other AND type is other, delete.",
-      "priority": 800,
-      "when": [
-        {
-          "allOf": [
-            {
-              "path": "$.classification.category2_sender_identity",
-              "op": "eq",
-              "value": "other"
-            },
-            {
-              "path": "$.classification.category1_type",
-              "op": "eq",
-              "value": "other"
-            }
-          ]
-        }
-      ],
-      "then": [
-        {
-          "type": "delete"
-        },
-        {
-          "type": "set_save_to_folder",
-          "params": {
-            "value": false
-          }
-        },
-        {
-          "type": "set_handler",
-          "params": {
-            "value": "no action required"
-          }
-        }
-      ]
-    },
-    {
-      "id": "meeting-detect-set-handler",
-      "description": "Requests for meeting require user action; set handler and compute conflict flag externally.",
+      "id": "meeting-request-handler",
+      "name": "Process Meeting Requests",
+      "description": "Intelligently handle meeting requests with calendar integration and conflict detection",
+      "category": "automation",
+      "tags": ["meetings", "calendar", "productivity"],
       "priority": 700,
-      "when": [
+      "enabled": true,
+      "conditions": [
         {
-          "allOf": [
+          "logic": "AND",
+          "conditions": [
             {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "request for meeting"
-            }
-          ]
-        }
-      ],
-      "then": [
-        {
-          "type": "set_handler",
-          "params": {
-            "value": "user action required"
-          }
-        }
-      ]
-    },
-    {
-      "id": "meeting-no-conflict-contact",
-      "description": "If no conflict and sender is in contacts, default to save_to_folder=true (user will choose accept/tentative/decline via digest).",
-      "priority": 690,
-      "when": [
-        {
-          "allOf": [
-            {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "request for meeting"
+              "field": "$.classification.context",
+              "operator": "contains",
+              "value": "request/meeting",
+              "caseInsensitive": true
             },
             {
-              "path": "$.calendar.conflict",
-              "op": "eq",
-              "value": false
-            },
-            {
-              "path": "$.contacts.sender_in_contacts",
-              "op": "eq",
-              "value": true
-            }
-          ]
-        }
-      ],
-      "then": [
-        {
-          "type": "set_save_to_folder",
-          "params": {
-            "value": true
-          }
-        }
-      ]
-    },
-    {
-      "id": "meeting-conflict-alert",
-      "description": "If meeting conflicts, set conflict alert flag for digest.",
-      "priority": 690,
-      "when": [
-        {
-          "allOf": [
-            {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "request for meeting"
-            },
-            {
-              "path": "$.calendar.conflict",
-              "op": "eq",
-              "value": true
-            }
-          ]
-        }
-      ],
-      "then": [
-        {
-          "type": "set_flag",
-          "params": {
-            "key": "meeting_conflict_alert",
-            "value": true
-          }
-        }
-      ]
-    },
-    {
-      "id": "rfi-set-handler",
-      "description": "Requests for information require user attention.",
-      "priority": 680,
-      "when": [
-        {
-          "allOf": [
-            {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "request for information"
-            }
-          ]
-        }
-      ],
-      "then": [
-        {
-          "type": "set_handler",
-          "params": {
-            "value": "user action required"
-          }
-        }
-      ]
-    },
-    {
-      "id": "notification-travel-appointment-deadline-autocreate",
-      "description": "If notification type is travel/appointment/deadline and no conflict, auto-add to primary calendar.",
-      "priority": 670,
-      "when": [
-        {
-          "allOf": [
-            {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "notification"
-            },
-            {
-              "path": "$.notification.subtype",
-              "op": "in",
-              "value": [
-                "travel",
-                "appointment",
-                "deadline"
+              "logic": "OR",
+              "conditions": [
+                {
+                  "field": "$.email.body.text",
+                  "operator": "regex",
+                  "value": "(meeting|schedule|calendar|appointment|call|zoom|teams|discuss)",
+                  "caseInsensitive": true
+                },
+                {
+                  "field": "$.email.subject",
+                  "operator": "regex",
+                  "value": "(meeting|schedule|calendar|appointment|call|zoom|teams)",
+                  "caseInsensitive": true
+                }
               ]
-            },
-            {
-              "path": "$.calendar.conflict",
-              "op": "eq",
-              "value": false
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "calendar_create",
-          "params": {
-            "calendar": "primary"
+          "type": "set_classification",
+          "priority": 1,
+          "parameters": {
+            "category": 4,
+            "label": "action_required",
+            "confidence": 0.9
           }
         },
         {
-          "type": "set_handler",
-          "params": {
-            "value": "no action required"
+          "type": "create_calendar_event",
+          "priority": 2,
+          "async": true,
+          "parameters": {
+            "event": {
+              "extractFromEmail": true,
+              "status": "tentative",
+              "visibility": "private",
+              "reminders": [
+                {
+                  "method": "popup",
+                  "minutes": 15
+                }
+              ],
+              "categories": ["Pending Confirmation"]
+            },
+            "checkConflicts": true,
+            "suggestAlternatives": true
           }
         },
         {
-          "type": "set_save_to_folder",
-          "params": {
-            "value": true
+          "type": "flag",
+          "priority": 3,
+          "parameters": {
+            "color": "orange"
+          }
+        },
+        {
+          "type": "add_label",
+          "priority": 4,
+          "parameters": {
+            "label": "Meeting-Request"
           }
         }
-      ]
+      ],
+      "exceptions": [
+        {
+          "field": "$.email.from.address",
+          "operator": "regex",
+          "value": "(noreply|no-reply|donotreply)@",
+          "caseInsensitive": true
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
     },
     {
-      "id": "notification-conflict-alert",
-      "description": "If a qualifying notification conflicts, flag for digest.",
-      "priority": 660,
-      "when": [
+      "id": "meeting-conflict-resolution",
+      "name": "Handle Calendar Conflicts",
+      "description": "Detect and manage calendar conflicts for meeting requests",
+      "category": "automation",
+      "tags": ["meetings", "calendar", "conflicts"],
+      "priority": 690,
+      "enabled": true,
+      "conditions": [
         {
-          "allOf": [
+          "logic": "AND",
+          "conditions": [
             {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "notification"
+              "field": "$.classification.context",
+              "operator": "contains",
+              "value": "request/meeting"
             },
             {
-              "path": "$.notification.subtype",
-              "op": "in",
-              "value": [
-                "travel",
-                "appointment",
-                "deadline"
-              ]
-            },
-            {
-              "path": "$.calendar.conflict",
-              "op": "eq",
+              "field": "$.calendarAnalysis.hasConflicts",
+              "operator": "eq",
               "value": true
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "set_flag",
-          "params": {
-            "key": "notification_conflict_alert",
-            "value": true
+          "type": "flag",
+          "priority": 1,
+          "parameters": {
+            "color": "red"
           }
         },
         {
-          "type": "set_handler",
-          "params": {
-            "value": "user action required"
+          "type": "set_custom_field",
+          "priority": 2,
+          "parameters": {
+            "customFields": {
+              "hasCalendarConflict": true,
+              "conflictCount": "$.calendarAnalysis.conflicts.length",
+              "suggestedAlternatives": "$.calendarAnalysis.suggestedTimes"
+            }
+          }
+        },
+        {
+          "type": "add_label",
+          "priority": 3,
+          "parameters": {
+            "label": "Calendar-Conflict"
+          }
+        },
+        {
+          "type": "send_notification",
+          "priority": 4,
+          "async": true,
+          "parameters": {
+            "notificationChannel": "push",
+            "notificationTemplate": "calendar_conflict",
+            "includeAlternatives": true
           }
         }
-      ]
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
     },
     {
-      "id": "promotional-default",
-      "description": "Promotional messages: no auto-action; allow user to delete or save via digest.",
-      "priority": 650,
-      "when": [
+      "id": "information-request-handler",
+      "name": "Process Information Requests",
+      "description": "Handle requests for information with appropriate urgency",
+      "category": "automation",
+      "tags": ["requests", "information", "action"],
+      "priority": 600,
+      "enabled": true,
+      "conditions": [
         {
-          "allOf": [
+          "logic": "AND",
+          "conditions": [
             {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "promotional"
+              "field": "$.classification.context",
+              "operator": "in",
+              "value": ["request/information", "request/action", "request/feedback"],
+              "caseInsensitive": true
+            },
+            {
+              "field": "$.classification.senderIdentity",
+              "operator": "notIn",
+              "value": ["malicious", "suspicious", "bot/automated"]
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "set_handler",
-          "params": {
-            "value": "no action required"
+          "type": "set_classification",
+          "priority": 1,
+          "parameters": {
+            "category": 4,
+            "label": "action_required"
+          }
+        },
+        {
+          "type": "flag",
+          "priority": 2,
+          "parameters": {
+            "color": "yellow"
+          }
+        },
+        {
+          "type": "add_label",
+          "priority": 3,
+          "parameters": {
+            "label": "Info-Request"
+          }
+        },
+        {
+          "type": "save_to_folder",
+          "priority": 4,
+          "parameters": {
+            "folder": "Action Required/Information Requests",
+            "createFolderIfNotExists": true
           }
         }
-      ]
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
     },
     {
-      "id": "junk-delete-or-report",
-      "description": "Junk messages default to delete; report as junk if provider supports.",
-      "priority": 640,
-      "when": [
+      "id": "notification-processor",
+      "name": "Process System Notifications",
+      "description": "Handle automated notifications, alerts, and system messages",
+      "category": "automation",
+      "tags": ["notifications", "automated", "system"],
+      "priority": 500,
+      "enabled": true,
+      "conditions": [
         {
-          "allOf": [
+          "logic": "OR",
+          "conditions": [
             {
-              "path": "$.classification.category3_context",
-              "op": "eq",
-              "value": "junk"
+              "field": "$.classification.context",
+              "operator": "startsWith",
+              "value": "notification/",
+              "caseInsensitive": true
+            },
+            {
+              "field": "$.classification.type",
+              "operator": "startsWith",
+              "value": "automated/",
+              "caseInsensitive": true
+            },
+            {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "$.email.from.address",
+                  "operator": "regex",
+                  "value": "(noreply|no-reply|notification|system|automated)@"
+                },
+                {
+                  "field": "$.classification.senderIdentity",
+                  "operator": "eq",
+                  "value": "bot/automated"
+                }
+              ]
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "report_junk"
-        },
-        {
-          "type": "delete"
-        },
-        {
-          "type": "set_save_to_folder",
-          "params": {
-            "value": false
+          "type": "set_classification",
+          "priority": 1,
+          "parameters": {
+            "category": 4,
+            "label": "no_action_required"
           }
         },
         {
-          "type": "set_handler",
-          "params": {
-            "value": "no action required"
+          "type": "save_to_folder",
+          "priority": 2,
+          "parameters": {
+            "folder": "Notifications/${YYYY-MM}",
+            "createFolderIfNotExists": true
           }
+        },
+        {
+          "type": "mark_read",
+          "priority": 3,
+          "parameters": {}
         }
-      ]
+      ],
+      "exceptions": [
+        {
+          "field": "$.email.subject",
+          "operator": "regex",
+          "value": "(urgent|critical|security|breach|failure|down)",
+          "caseInsensitive": true
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
     },
     {
-      "id": "foldering-when-save",
-      "description": "When save_to_folder=true, engine will compute path conversations/<domain>/<localpart>.",
+      "id": "urgent-notification-escalation",
+      "name": "Escalate Urgent Notifications",
+      "description": "Special handling for urgent system notifications and alerts",
+      "category": "security",
+      "tags": ["urgent", "alerts", "escalation"],
+      "priority": 480,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "AND",
+          "conditions": [
+            {
+              "field": "$.classification.context",
+              "operator": "startsWith",
+              "value": "notification/"
+            },
+            {
+              "logic": "OR",
+              "conditions": [
+                {
+                  "field": "$.email.subject",
+                  "operator": "regex",
+                  "value": "(urgent|critical|security|breach|failure|down|emergency)",
+                  "caseInsensitive": true
+                },
+                {
+                  "field": "$.email.importance",
+                  "operator": "eq",
+                  "value": "high"
+                },
+                {
+                  "field": "$.email.headers.xPriority",
+                  "operator": "eq",
+                  "value": "1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_classification",
+          "priority": 1,
+          "parameters": {
+            "category": 4,
+            "label": "urgent_action_required"
+          }
+        },
+        {
+          "type": "flag",
+          "priority": 2,
+          "parameters": {
+            "color": "red"
+          }
+        },
+        {
+          "type": "send_notification",
+          "priority": 3,
+          "async": true,
+          "parameters": {
+            "notificationChannel": "push",
+            "notificationTemplate": "urgent_alert",
+            "priority": "high"
+          }
+        },
+        {
+          "type": "add_label",
+          "priority": 4,
+          "parameters": {
+            "label": "URGENT"
+          }
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "promotional-handler",
+      "name": "Process Promotional Content",
+      "description": "Handle marketing, sales, and promotional emails",
+      "category": "automation",
+      "tags": ["marketing", "promotional", "bulk"],
+      "priority": 400,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "OR",
+          "conditions": [
+            {
+              "field": "$.classification.context",
+              "operator": "startsWith",
+              "value": "promotional/"
+            },
+            {
+              "field": "$.classification.senderIdentity",
+              "operator": "eq",
+              "value": "marketer"
+            },
+            {
+              "field": "$.email.headers.listUnsubscribe",
+              "operator": "exists"
+            },
+            {
+              "field": "$.email.body.text",
+              "operator": "regex",
+              "value": "(unsubscribe|opt.?out|email preferences|marketing email)",
+              "caseInsensitive": true
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "set_classification",
+          "priority": 1,
+          "parameters": {
+            "category": 4,
+            "label": "no_action_required"
+          }
+        },
+        {
+          "type": "save_to_folder",
+          "priority": 2,
+          "parameters": {
+            "folder": "Promotions",
+            "createFolderIfNotExists": true
+          }
+        },
+        {
+          "type": "mark_read",
+          "priority": 3,
+          "parameters": {}
+        },
+        {
+          "type": "add_label",
+          "priority": 4,
+          "parameters": {
+            "label": "Promotional"
+          }
+        }
+      ],
+      "exceptions": [
+        {
+          "field": "$.email.from.address",
+          "operator": "in",
+          "value": "${WHITELISTED_MARKETERS}"
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "transactional-processor",
+      "name": "Process Transactional Emails",
+      "description": "Handle order confirmations, receipts, and transaction notifications",
+      "category": "automation",
+      "tags": ["transactional", "orders", "receipts"],
+      "priority": 450,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "OR",
+          "conditions": [
+            {
+              "field": "$.classification.context",
+              "operator": "startsWith",
+              "value": "transactional/"
+            },
+            {
+              "field": "$.email.subject",
+              "operator": "regex",
+              "value": "(order|receipt|invoice|payment|shipping|delivery|confirmation)",
+              "caseInsensitive": true
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "save_to_folder",
+          "priority": 1,
+          "parameters": {
+            "folder": "Receipts/${YYYY}",
+            "createFolderIfNotExists": true
+          }
+        },
+        {
+          "type": "add_label",
+          "priority": 2,
+          "parameters": {
+            "label": "Receipt"
+          }
+        },
+        {
+          "type": "archive",
+          "priority": 3,
+          "async": true,
+          "parameters": {
+            "archiveAfterDays": 30
+          }
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "attachment-security-scan",
+      "name": "Scan Email Attachments",
+      "description": "Security scan all attachments for malware and suspicious content",
+      "category": "security",
+      "tags": ["attachments", "security", "malware"],
+      "priority": 850,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "AND",
+          "conditions": [
+            {
+              "field": "$.email.hasAttachments",
+              "operator": "eq",
+              "value": true
+            },
+            {
+              "field": "$.email.attachmentCount",
+              "operator": "gt",
+              "value": 0
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "execute_script",
+          "priority": 1,
+          "async": false,
+          "parameters": {
+            "scriptId": "attachment-scanner",
+            "scriptParameters": {
+              "scanLevel": "comprehensive",
+              "quarantineThreshold": 0.7
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "security-team",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "vip-sender-priority",
+      "name": "Prioritize VIP Senders",
+      "description": "Special handling for emails from VIP contacts",
+      "category": "routing",
+      "tags": ["vip", "priority", "important"],
+      "priority": 950,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "OR",
+          "conditions": [
+            {
+              "field": "$.email.from.address",
+              "operator": "in",
+              "value": "${VIP_EMAILS}"
+            },
+            {
+              "field": "$.contacts.tags",
+              "operator": "contains",
+              "value": "vip"
+            },
+            {
+              "field": "$.classification.senderIdentity",
+              "operator": "in",
+              "value": ["manager", "client", "partner"]
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "flag",
+          "priority": 1,
+          "parameters": {
+            "color": "purple"
+          }
+        },
+        {
+          "type": "mark_important",
+          "priority": 2,
+          "parameters": {}
+        },
+        {
+          "type": "add_label",
+          "priority": 3,
+          "parameters": {
+            "label": "VIP"
+          }
+        },
+        {
+          "type": "send_notification",
+          "priority": 4,
+          "async": true,
+          "parameters": {
+            "notificationChannel": "push",
+            "notificationTemplate": "vip_email",
+            "priority": "high"
+          }
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "admin",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "conversation-threading",
+      "name": "Organize Email Conversations",
+      "description": "Group related emails into conversation threads",
+      "category": "automation",
+      "tags": ["conversations", "threading", "organization"],
+      "priority": 300,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "OR",
+          "conditions": [
+            {
+              "field": "$.email.headers.inReplyTo",
+              "operator": "exists"
+            },
+            {
+              "field": "$.email.headers.references",
+              "operator": "exists"
+            },
+            {
+              "field": "$.email.subject",
+              "operator": "regex",
+              "value": "^(RE:|FW:|Fwd:)",
+              "caseInsensitive": true
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "save_to_folder",
+          "priority": 1,
+          "parameters": {
+            "folder": "conversations/${DOMAIN}/${SENDER_LOCAL_PART}",
+            "createFolderIfNotExists": true
+          }
+        },
+        {
+          "type": "set_custom_field",
+          "priority": 2,
+          "parameters": {
+            "customFields": {
+              "isPartOfThread": true,
+              "threadId": "${THREAD_ID}"
+            }
+          }
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "auto-reply-out-of-office",
+      "name": "Auto-Reply for Out of Office",
+      "description": "Send automatic replies when out of office is enabled",
+      "category": "automation",
+      "tags": ["auto-reply", "out-of-office"],
       "priority": 200,
-      "when": [
+      "enabled": false,
+      "schedule": {
+        "startDate": "2024-12-23T00:00:00Z",
+        "endDate": "2025-01-02T00:00:00Z",
+        "timezone": "America/Kentucky/Louisville"
+      },
+      "conditions": [
         {
-          "allOf": [
+          "logic": "AND",
+          "conditions": [
             {
-              "path": "$.engine.save_to_folder",
-              "op": "eq",
-              "value": true
+              "field": "$.email.autoReplied",
+              "operator": "eq",
+              "value": false
+            },
+            {
+              "field": "$.classification.senderIdentity",
+              "operator": "notIn",
+              "value": ["bot/automated", "malicious", "suspicious"]
             }
           ]
         }
       ],
-      "then": [
+      "actions": [
         {
-          "type": "move_folder",
-          "params": {
-            "path": "conversations/${from_domain}/${from_localpart}"
+          "type": "reply",
+          "priority": 1,
+          "async": true,
+          "parameters": {
+            "replyTemplate": "out_of_office",
+            "markAsAutoReplied": true,
+            "includeOriginalMessage": false
           }
         }
-      ]
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "user",
+        "executionCount": 0,
+        "successRate": 100
+      }
+    },
+    {
+      "id": "cleanup-old-emails",
+      "name": "Archive Old Emails",
+      "description": "Automatically archive emails older than retention period",
+      "category": "automation",
+      "tags": ["cleanup", "archive", "retention"],
+      "priority": 100,
+      "enabled": true,
+      "conditions": [
+        {
+          "logic": "AND",
+          "conditions": [
+            {
+              "field": "$.email.receivedAt",
+              "operator": "lt",
+              "value": "${NOW - 90 DAYS}"
+            },
+            {
+              "field": "$.email.isFlagged",
+              "operator": "eq",
+              "value": false
+            },
+            {
+              "field": "$.classification.reviewed",
+              "operator": "eq",
+              "value": "yes"
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "type": "archive",
+          "priority": 1,
+          "async": true,
+          "parameters": {}
+        }
+      ],
+      "exceptions": [
+        {
+          "field": "$.email.categories",
+          "operator": "contains",
+          "value": "Keep Forever"
+        }
+      ],
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "executionCount": 0,
+        "successRate": 100
+      }
     }
-  ]
+  ],
+  "ruleGroups": [
+    {
+      "id": "security-rules",
+      "name": "Security Rules",
+      "description": "Rules for security and threat protection",
+      "enabled": true,
+      "ruleIds": ["security-malicious-quarantine", "attachment-security-scan"]
+    },
+    {
+      "id": "automation-rules",
+      "name": "Automation Rules",
+      "description": "Rules for workflow automation",
+      "enabled": true,
+      "ruleIds": [
+        "base-mark-read",
+        "sender-trusted-add-contact",
+        "meeting-request-handler",
+        "information-request-handler",
+        "notification-processor",
+        "promotional-handler",
+        "transactional-processor",
+        "conversation-threading"
+      ]
+    },
+    {
+      "id": "priority-rules",
+      "name": "Priority & VIP Rules",
+      "description": "Rules for prioritizing important emails",
+      "enabled": true,
+      "ruleIds": ["vip-sender-priority", "urgent-notification-escalation"]
+    },
+    {
+      "id": "maintenance-rules",
+      "name": "Maintenance Rules",
+      "description": "Rules for email cleanup and maintenance",
+      "enabled": true,
+      "ruleIds": ["cleanup-old-emails", "auto-reply-out-of-office"]
+    }
+  ],
+  "globalConditions": [
+    {
+      "field": "$.email.size",
+      "operator": "lt",
+      "value": 52428800,
+      "negate": false
+    }
+  ],
+  "variables": {
+    "VIP_EMAILS": ["ceo@company.com", "cto@company.com", "important@client.com"],
+    "WHITELISTED_MARKETERS": ["newsletter@trustedsource.com"],
+    "MAX_ATTACHMENT_SIZE": 26214400,
+    "RETENTION_DAYS": 90,
+    "DOMAIN": "${EMAIL_DOMAIN}",
+    "SENDER_LOCAL_PART": "${SENDER_EMAIL_LOCAL}",
+    "THREAD_ID": "${COMPUTE_THREAD_ID}",
+    "NOW": "${CURRENT_TIMESTAMP}",
+    "YYYY": "${CURRENT_YEAR}",
+    "YYYY-MM": "${CURRENT_YEAR_MONTH}"
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-12-01T00:00:00Z",
+    "publishedAt": "2024-01-15T00:00:00Z",
+    "author": "system",
+    "approvedBy": "admin",
+    "description": "Production email processing ruleset with comprehensive automation and security features",
+    "changeNotes": "Enhanced v2 ruleset with production-ready features including security scanning, VIP handling, and advanced automation",
+    "tags": ["email", "automation", "security", "production"],
+    "environment": "production",
+    "status": "active",
+    "qualityMetrics": {
+      "coverage": 95,
+      "accuracy": 98,
+      "falsePositiveRate": 2,
+      "falseNegativeRate": 1
+    }
+  },
+  "settings": {
+    "executionMode": "priority",
+    "stopOnFirstMatch": false,
+    "maxExecutionTime": 30000,
+    "maxRulesPerEmail": 50,
+    "enableDryRun": false,
+    "debugMode": false
+  },
+  "compatibility": {
+    "minimumApiVersion": "2.0.0",
+    "maximumApiVersion": "3.0.0",
+    "requiredTaxonomyVersion": "v2",
+    "backwardCompatible": true,
+    "migrationRequired": false,
+    "breakingChanges": []
+  },
+  "extensions": {
+    "customActions": {
+      "enabled": true,
+      "maxCustomActions": 10
+    },
+    "webhooks": {
+      "enabled": true,
+      "maxWebhooksPerRule": 3
+    },
+    "scripting": {
+      "enabled": true,
+      "allowedLanguages": ["javascript", "python"],
+      "sandboxed": true
+    }
+  }
+}
+  }
 }

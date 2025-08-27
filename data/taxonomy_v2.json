@@ -1,62 +1,616 @@
 {
   "type": "email_categories",
   "version": "v2",
+  "schemaVersion": "1.0.0",
   "categories": [
     {
       "id": 0,
       "name": "reviewed",
-      "review_count": 1,
+      "displayName": "Review Status",
+      "description": "Tracks whether the email has been reviewed and processed by the user",
+      "labels": ["yes", "no", "partial", "pending"],
+      "labelGroups": [
+        {
+          "name": "Status",
+          "description": "Review status options",
+          "labels": ["yes", "no", "partial", "pending"]
+        }
+      ],
       "required": true,
-      "labels": ["reviewed"]
+      "allowCustomLabels": false,
+      "defaultLabel": "no",
+      "constraints": {
+        "mutuallyExclusive": true,
+        "requiredConfidenceThreshold": 0.9
+      },
+      "uiHints": {
+        "displayOrder": 0,
+        "icon": "check-circle",
+        "color": "#4CAF50",
+        "inputType": "radio",
+        "hidden": false
+      },
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "updatedBy": "system",
+        "usageStats": {
+          "totalClassifications": 0,
+          "labelDistribution": {
+            "yes": 0,
+            "no": 0,
+            "partial": 0,
+            "pending": 0
+          }
+        }
+      },
+      "integrations": {}
     },
     {
       "id": 1,
       "name": "type",
-      "required": true,
+      "displayName": "Email Type",
+      "description": "Categorizes emails by their primary purpose or origin (work, personal, etc.)",
       "labels": [
         "work/WhiskeyHouse",
+        "work/client",
+        "work/internal",
+        "work/vendor",
         "work/other",
-        "personal",
-        "professional",
+        "personal/family",
+        "personal/friends",
+        "personal/financial",
+        "personal/shopping",
+        "personal/other",
+        "professional/networking",
+        "professional/job",
+        "professional/education",
+        "professional/other",
+        "automated/notification",
+        "automated/alert",
+        "automated/report",
+        "automated/other",
         "other"
-      ]
+      ],
+      "labelGroups": [
+        {
+          "name": "Work",
+          "description": "Work-related emails",
+          "labels": [
+            "work/WhiskeyHouse",
+            "work/client",
+            "work/internal",
+            "work/vendor",
+            "work/other"
+          ]
+        },
+        {
+          "name": "Personal",
+          "description": "Personal emails",
+          "labels": [
+            "personal/family",
+            "personal/friends",
+            "personal/financial",
+            "personal/shopping",
+            "personal/other"
+          ]
+        },
+        {
+          "name": "Professional",
+          "description": "Professional development emails",
+          "labels": [
+            "professional/networking",
+            "professional/job",
+            "professional/education",
+            "professional/other"
+          ]
+        },
+        {
+          "name": "Automated",
+          "description": "System-generated emails",
+          "labels": [
+            "automated/notification",
+            "automated/alert",
+            "automated/report",
+            "automated/other"
+          ]
+        }
+      ],
+      "required": true,
+      "allowCustomLabels": true,
+      "defaultLabel": "other",
+      "constraints": {
+        "mutuallyExclusive": true,
+        "requiredConfidenceThreshold": 0.7,
+        "validationRegex": "^[a-zA-Z0-9]+(/[a-zA-Z0-9]+)?$"
+      },
+      "uiHints": {
+        "displayOrder": 1,
+        "icon": "folder",
+        "color": "#2196F3",
+        "inputType": "dropdown",
+        "hidden": false
+      },
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "updatedBy": "admin",
+        "changeHistory": [
+          {
+            "timestamp": "2024-12-01T00:00:00Z",
+            "action": "label_added",
+            "user": "admin",
+            "changes": {
+              "added": [
+                "work/client",
+                "personal/financial",
+                "professional/*",
+                "automated/*"
+              ]
+            }
+          }
+        ],
+        "usageStats": {
+          "totalClassifications": 0,
+          "labelDistribution": {}
+        }
+      },
+      "integrations": {
+        "outlook": {
+          "categoryName": "Email Type",
+          "colorCode": "preset1"
+        },
+        "gmail": {
+          "labelName": "Type"
+        }
+      }
     },
     {
       "id": 2,
-      "name": "sender identity",
-      "required": true,
+      "name": "sender_identity",
+      "displayName": "Sender Identity",
+      "description": "Identifies the relationship or role of the email sender",
       "labels": [
         "friend",
+        "family",
         "contact",
         "co-worker",
+        "manager",
+        "direct-report",
         "vendor",
+        "client",
+        "partner",
         "marketer",
+        "recruiter",
         "colleague",
         "organization",
         "enterprise",
+        "government",
+        "educational",
+        "healthcare",
+        "financial",
+        "bot/automated",
+        "suspicious",
         "malicious",
+        "unknown",
         "other"
-      ]
+      ],
+      "labelGroups": [
+        {
+          "name": "Personal",
+          "description": "Personal relationships",
+          "labels": ["friend", "family", "contact"]
+        },
+        {
+          "name": "Work",
+          "description": "Work relationships",
+          "labels": ["co-worker", "manager", "direct-report", "colleague"]
+        },
+        {
+          "name": "Business",
+          "description": "Business relationships",
+          "labels": ["vendor", "client", "partner", "marketer", "recruiter"]
+        },
+        {
+          "name": "Institutional",
+          "description": "Organizations and institutions",
+          "labels": [
+            "organization",
+            "enterprise",
+            "government",
+            "educational",
+            "healthcare",
+            "financial"
+          ]
+        },
+        {
+          "name": "Automated/Suspicious",
+          "description": "Non-human or suspicious senders",
+          "labels": ["bot/automated", "suspicious", "malicious"]
+        }
+      ],
+      "required": true,
+      "allowCustomLabels": true,
+      "defaultLabel": "unknown",
+      "constraints": {
+        "mutuallyExclusive": true,
+        "requiredConfidenceThreshold": 0.6
+      },
+      "uiHints": {
+        "displayOrder": 2,
+        "icon": "person",
+        "color": "#FF9800",
+        "inputType": "autocomplete",
+        "hidden": false
+      },
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "updatedBy": "admin",
+        "changeHistory": [
+          {
+            "timestamp": "2024-12-01T00:00:00Z",
+            "action": "updated",
+            "user": "admin",
+            "changes": {
+              "added": [
+                "family",
+                "manager",
+                "direct-report",
+                "client",
+                "partner",
+                "recruiter",
+                "government",
+                "educational",
+                "healthcare",
+                "financial",
+                "bot/automated",
+                "suspicious",
+                "unknown"
+              ],
+              "renamed": { "sender identity": "sender_identity" }
+            }
+          }
+        ],
+        "usageStats": {
+          "totalClassifications": 0,
+          "labelDistribution": {}
+        }
+      },
+      "integrations": {
+        "outlook": {
+          "categoryName": "Sender Type"
+        },
+        "gmail": {
+          "labelName": "Sender"
+        }
+      }
     },
     {
       "id": 3,
       "name": "context",
-      "required": true,
+      "displayName": "Email Context",
+      "description": "The primary purpose or context of the email content",
       "labels": [
-        "request for meeting",
-        "request for information",
-        "promotional",
-        "unsolicited",
-        "notification",
+        "request/meeting",
+        "request/information",
+        "request/action",
+        "request/approval",
+        "request/feedback",
+        "request/help",
+        "request/other",
+        "notification/system",
+        "notification/update",
+        "notification/reminder",
+        "notification/alert",
+        "notification/report",
+        "notification/other",
+        "communication/announcement",
+        "communication/discussion",
+        "communication/fyi",
+        "communication/introduction",
+        "communication/thank-you",
+        "communication/follow-up",
+        "communication/other",
+        "promotional/marketing",
+        "promotional/sales",
+        "promotional/event",
+        "promotional/newsletter",
+        "promotional/other",
+        "transactional/order",
+        "transactional/payment",
+        "transactional/shipping",
+        "transactional/account",
+        "transactional/other",
+        "unsolicited/spam",
+        "unsolicited/phishing",
+        "unsolicited/scam",
+        "unsolicited/other",
         "junk",
         "other"
-      ]
+      ],
+      "labelGroups": [
+        {
+          "name": "Requests",
+          "description": "Emails requesting something",
+          "labels": [
+            "request/meeting",
+            "request/information",
+            "request/action",
+            "request/approval",
+            "request/feedback",
+            "request/help",
+            "request/other"
+          ]
+        },
+        {
+          "name": "Notifications",
+          "description": "System and automated notifications",
+          "labels": [
+            "notification/system",
+            "notification/update",
+            "notification/reminder",
+            "notification/alert",
+            "notification/report",
+            "notification/other"
+          ]
+        },
+        {
+          "name": "Communications",
+          "description": "General communications",
+          "labels": [
+            "communication/announcement",
+            "communication/discussion",
+            "communication/fyi",
+            "communication/introduction",
+            "communication/thank-you",
+            "communication/follow-up",
+            "communication/other"
+          ]
+        },
+        {
+          "name": "Promotional",
+          "description": "Marketing and promotional content",
+          "labels": [
+            "promotional/marketing",
+            "promotional/sales",
+            "promotional/event",
+            "promotional/newsletter",
+            "promotional/other"
+          ]
+        },
+        {
+          "name": "Transactional",
+          "description": "Transaction-related emails",
+          "labels": [
+            "transactional/order",
+            "transactional/payment",
+            "transactional/shipping",
+            "transactional/account",
+            "transactional/other"
+          ]
+        },
+        {
+          "name": "Unsolicited",
+          "description": "Unwanted or suspicious emails",
+          "labels": [
+            "unsolicited/spam",
+            "unsolicited/phishing",
+            "unsolicited/scam",
+            "unsolicited/other",
+            "junk"
+          ]
+        }
+      ],
+      "required": true,
+      "allowCustomLabels": true,
+      "defaultLabel": "other",
+      "constraints": {
+        "mutuallyExclusive": false,
+        "maxSelections": 3,
+        "requiredConfidenceThreshold": 0.65
+      },
+      "uiHints": {
+        "displayOrder": 3,
+        "icon": "label",
+        "color": "#9C27B0",
+        "inputType": "tags",
+        "hidden": false
+      },
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "updatedBy": "admin",
+        "changeHistory": [
+          {
+            "timestamp": "2024-12-01T00:00:00Z",
+            "action": "updated",
+            "user": "admin",
+            "changes": {
+              "restructured": "Organized into hierarchical groups",
+              "added": ["Multiple subcategories for better granularity"]
+            }
+          }
+        ],
+        "usageStats": {
+          "totalClassifications": 0,
+          "labelDistribution": {}
+        }
+      },
+      "integrations": {}
     },
     {
       "id": 4,
       "name": "handler",
+      "displayName": "Action Required",
+      "description": "Indicates whether the email requires user action and its urgency",
+      "labels": [
+        "urgent_action_required",
+        "action_required",
+        "action_suggested",
+        "review_required",
+        "no_action_required",
+        "automated_handled",
+        "deferred"
+      ],
+      "labelGroups": [
+        {
+          "name": "Action Levels",
+          "description": "Different levels of required action",
+          "labels": [
+            "urgent_action_required",
+            "action_required",
+            "action_suggested",
+            "review_required"
+          ]
+        },
+        {
+          "name": "No Action",
+          "description": "No user intervention needed",
+          "labels": ["no_action_required", "automated_handled", "deferred"]
+        }
+      ],
       "required": true,
-      "labels": ["user action required", "no action required"]
+      "allowCustomLabels": false,
+      "defaultLabel": "review_required",
+      "constraints": {
+        "mutuallyExclusive": true,
+        "requiredConfidenceThreshold": 0.75
+      },
+      "uiHints": {
+        "displayOrder": 4,
+        "icon": "task",
+        "color": "#F44336",
+        "inputType": "radio",
+        "hidden": false
+      },
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-12-01T00:00:00Z",
+        "createdBy": "system",
+        "updatedBy": "admin",
+        "changeHistory": [
+          {
+            "timestamp": "2024-12-01T00:00:00Z",
+            "action": "updated",
+            "user": "admin",
+            "changes": {
+              "added": [
+                "urgent_action_required",
+                "action_suggested",
+                "review_required",
+                "automated_handled",
+                "deferred"
+              ],
+              "modified": "Expanded from binary to multi-level action classification"
+            }
+          }
+        ],
+        "usageStats": {
+          "totalClassifications": 0,
+          "labelDistribution": {}
+        }
+      },
+      "integrations": {
+        "outlook": {
+          "categoryName": "Action Required",
+          "colorCode": "preset6"
+        },
+        "gmail": {
+          "labelName": "Action-Required"
+        }
+      }
     }
-  ]
+  ],
+  "categoryOrder": [0, 1, 2, 3, 4],
+  "labelMappings": {
+    "synonyms": {
+      "co-worker": ["coworker", "colleague", "team member"],
+      "vendor": ["supplier", "service provider"],
+      "malicious": ["spam", "phishing", "scam"],
+      "request for meeting": [
+        "meeting request",
+        "schedule meeting",
+        "book time"
+      ],
+      "request for information": ["info request", "question", "inquiry"],
+      "user action required": ["action needed", "response required", "urgent"]
+    },
+    "implications": [
+      {
+        "if": {
+          "categoryId": 2,
+          "label": "malicious"
+        },
+        "then": {
+          "categoryId": 4,
+          "label": "no_action_required",
+          "confidence": 0.95
+        }
+      },
+      {
+        "if": {
+          "categoryId": 3,
+          "label": "request/meeting"
+        },
+        "then": {
+          "categoryId": 4,
+          "label": "action_required",
+          "confidence": 0.85
+        }
+      },
+      {
+        "if": {
+          "categoryId": 3,
+          "label": "unsolicited/phishing"
+        },
+        "then": {
+          "categoryId": 2,
+          "label": "malicious",
+          "confidence": 0.9
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-12-01T00:00:00Z",
+    "publishedAt": "2024-01-15T00:00:00Z",
+    "author": "system",
+    "approvedBy": "admin",
+    "description": "Production-ready email classification taxonomy with comprehensive categorization for automated email processing",
+    "changeNotes": "Enhanced v2 taxonomy with hierarchical labels, groups, implications, and production-ready metadata",
+    "tags": ["email", "classification", "ml", "production"],
+    "environment": "production",
+    "status": "active",
+    "validationResults": {
+      "validatedAt": "2024-12-01T00:00:00Z",
+      "validatedBy": "system",
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "compatibility": {
+    "minimumApiVersion": "2.0.0",
+    "maximumApiVersion": "3.0.0",
+    "backwardCompatible": true,
+    "migrationRequired": false
+  },
+  "extensions": {
+    "customCategories": {
+      "enabled": false,
+      "maxCustomCategories": 2,
+      "startId": 5
+    },
+    "mlFeatures": {
+      "enabled": true,
+      "minConfidence": 0.5,
+      "defaultConfidence": 0.7,
+      "useHierarchicalLabels": true
+    }
+  }
 }

@@ -2,43 +2,143 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://email-assistant.local/schemas/ruleset.json",
   "title": "Email Processing Ruleset",
-  "description": "Schema for email processing rules with conditions and actions",
+  "description": "Production-ready schema for email processing rules with comprehensive conditions, actions, and governance features",
   "type": "object",
-  "required": ["type", "version", "rules"],
+  "required": ["type", "version", "rules", "metadata"],
   "properties": {
     "type": {
       "type": "string",
       "const": "email_rules",
-      "description": "Type identifier for ruleset"
+      "description": "Type identifier for ruleset - must be 'email_rules'"
     },
     "version": {
       "type": "string",
-      "pattern": "^v\\d+$",
-      "description": "Version identifier (e.g., v2)"
+      "pattern": "^v\\d+(\\.\\d+){0,2}(-[a-zA-Z0-9]+)?$",
+      "description": "Semantic version identifier (e.g., v2, v2.1, v2.1.0, v2.1.0-beta)",
+      "examples": ["v2", "v2.1", "v2.1.0", "v2.1.0-beta"]
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Version of this schema specification"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Human-readable name for this ruleset"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Detailed description of this ruleset's purpose"
     },
     "rules": {
       "type": "array",
-      "description": "List of processing rules",
+      "description": "List of processing rules in priority order",
       "items": {
         "$ref": "#/definitions/rule"
       }
     },
-    "metadata": {
-      "type": "object",
-      "description": "Optional metadata",
-      "properties": {
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "author": {
-          "type": "string"
+    "ruleGroups": {
+      "type": "array",
+      "description": "Optional grouping of rules for organization",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "ruleIds"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "ruleIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
         }
       }
+    },
+    "globalConditions": {
+      "type": "array",
+      "description": "Conditions that apply to all rules",
+      "items": {
+        "$ref": "#/definitions/condition"
+      }
+    },
+    "variables": {
+      "type": "object",
+      "description": "Global variables that can be referenced in rules",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "number" },
+          { "type": "boolean" },
+          { "type": "array" },
+          { "type": "object" }
+        ]
+      }
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Ruleset execution settings",
+      "properties": {
+        "executionMode": {
+          "type": "string",
+          "enum": ["sequential", "parallel", "priority"],
+          "default": "priority",
+          "description": "How rules are executed"
+        },
+        "stopOnFirstMatch": {
+          "type": "boolean",
+          "default": false,
+          "description": "Stop processing after first matching rule"
+        },
+        "maxExecutionTime": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000,
+          "default": 5000,
+          "description": "Maximum execution time in milliseconds"
+        },
+        "maxRulesPerEmail": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50,
+          "description": "Maximum rules to evaluate per email"
+        },
+        "enableDryRun": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable dry-run mode for testing"
+        },
+        "debugMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable detailed debug logging"
+        }
+      }
+    },
+    "compatibility": {
+      "$ref": "#/definitions/compatibility"
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Extension point for custom properties",
+      "additionalProperties": true
     }
   },
   "definitions": {
@@ -54,15 +154,36 @@
         "name": {
           "type": "string",
           "minLength": 1,
+          "maxLength": 100,
           "description": "Human-readable rule name"
         },
         "description": {
           "type": "string",
-          "description": "Optional rule description"
+          "maxLength": 500,
+          "description": "Detailed rule description"
+        },
+        "category": {
+          "type": "string",
+          "description": "Rule category for organization",
+          "enum": [
+            "classification",
+            "routing",
+            "automation",
+            "security",
+            "notification",
+            "custom"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for rule organization and search",
+          "items": { "type": "string" },
+          "uniqueItems": true
         },
         "priority": {
           "type": "integer",
           "minimum": 1,
+          "maximum": 10000,
           "description": "Rule priority (lower numbers = higher priority)"
         },
         "enabled": {
@@ -70,12 +191,54 @@
           "default": true,
           "description": "Whether the rule is active"
         },
+        "schedule": {
+          "type": "object",
+          "description": "Optional scheduling for rule activation",
+          "properties": {
+            "startDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "timezone": {
+              "type": "string",
+              "description": "IANA timezone identifier"
+            },
+            "daysOfWeek": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              }
+            },
+            "timeRanges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "end": {
+                    "type": "string",
+                    "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+                  }
+                }
+              }
+            }
+          }
+        },
         "conditions": {
           "type": "array",
           "description": "Conditions that must be met for the rule to apply",
           "minItems": 1,
           "items": {
-            "$ref": "#/definitions/condition"
+            "$ref": "#/definitions/conditionGroup"
           }
         },
         "actions": {
@@ -85,49 +248,181 @@
           "items": {
             "$ref": "#/definitions/action"
           }
+        },
+        "exceptions": {
+          "type": "array",
+          "description": "Exception conditions that prevent rule execution",
+          "items": {
+            "$ref": "#/definitions/condition"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "createdBy": {
+              "type": "string"
+            },
+            "updatedBy": {
+              "type": "string"
+            },
+            "executionCount": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of times this rule has been executed"
+            },
+            "lastExecuted": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "successRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Success rate percentage"
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "description": "Performance metrics and limits",
+          "properties": {
+            "avgExecutionTime": {
+              "type": "number",
+              "description": "Average execution time in milliseconds"
+            },
+            "maxExecutionTime": {
+              "type": "number",
+              "description": "Maximum allowed execution time in milliseconds"
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 30000,
+              "description": "Timeout in milliseconds"
+            }
+          }
+        }
+      }
+    },
+    "conditionGroup": {
+      "type": "object",
+      "properties": {
+        "logic": {
+          "type": "string",
+          "enum": ["AND", "OR", "NOT", "XOR"],
+          "default": "AND",
+          "description": "Logic operator for conditions in this group"
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "$ref": "#/definitions/condition" },
+              { "$ref": "#/definitions/conditionGroup" }
+            ]
+          }
         }
       }
     },
     "condition": {
       "type": "object",
-      "required": ["field", "operator", "value"],
+      "required": ["field", "operator"],
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Optional condition identifier for reference"
+        },
         "field": {
           "type": "string",
-          "description": "Field to evaluate",
-          "enum": [
+          "description": "Field to evaluate (supports JSONPath expressions)",
+          "examples": [
             "subject",
             "body",
             "from",
             "to",
             "cc",
-            "classification.type",
-            "classification.senderIdentity",
-            "classification.context",
-            "classification.handler",
-            "hasAttachments",
-            "attachmentCount"
+            "bcc",
+            "$.email.headers['X-Priority']",
+            "$.classification.type",
+            "$.attachments[*].mimeType"
           ]
         },
         "operator": {
           "type": "string",
           "description": "Comparison operator",
-          "enum": ["exists", "eq", "in", "lt", "lte", "gt", "gte", "regex"]
+          "enum": [
+            "exists",
+            "notExists",
+            "eq",
+            "neq",
+            "in",
+            "notIn",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "regex",
+            "notRegex",
+            "contains",
+            "notContains",
+            "startsWith",
+            "endsWith",
+            "between",
+            "isNull",
+            "isNotNull",
+            "isEmpty",
+            "isNotEmpty",
+            "isTrue",
+            "isFalse"
+          ]
         },
         "value": {
-          "description": "Value to compare against",
+          "description": "Value to compare against (type depends on operator)",
           "oneOf": [
             { "type": "string" },
             { "type": "number" },
             { "type": "boolean" },
-            { "type": "array", "items": { "type": "string" } }
+            { "type": "null" },
+            { "type": "array" },
+            { "type": "object" }
           ]
         },
-        "logic": {
+        "caseInsensitive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Case-insensitive comparison for string operations"
+        },
+        "negate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Negate the condition result"
+        },
+        "transform": {
           "type": "string",
-          "enum": ["AND", "OR"],
-          "default": "AND",
-          "description": "Logic operator for multiple conditions"
+          "description": "Transform to apply before comparison",
+          "enum": [
+            "lowercase",
+            "uppercase",
+            "trim",
+            "length",
+            "parseInt",
+            "parseFloat"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Weight for scoring-based conditions"
         }
       }
     },
@@ -135,6 +430,10 @@
       "type": "object",
       "required": ["type"],
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Optional action identifier for reference"
+        },
         "type": {
           "type": "string",
           "description": "Action type",
@@ -142,15 +441,66 @@
             "set_classification",
             "mark_read",
             "mark_unread",
+            "mark_important",
             "create_calendar_event",
+            "update_calendar_event",
             "save_to_folder",
+            "copy_to_folder",
             "add_contact",
+            "update_contact",
             "report_junk",
+            "report_phishing",
             "delete",
+            "archive",
             "forward",
+            "reply",
             "flag",
-            "add_label"
+            "unflag",
+            "add_label",
+            "remove_label",
+            "add_tag",
+            "set_category",
+            "trigger_webhook",
+            "send_notification",
+            "log_event",
+            "set_custom_field",
+            "execute_script",
+            "quarantine"
           ]
+        },
+        "priority": {
+          "type": "integer",
+          "description": "Action execution priority within the rule"
+        },
+        "async": {
+          "type": "boolean",
+          "default": false,
+          "description": "Execute action asynchronously"
+        },
+        "retryPolicy": {
+          "type": "object",
+          "description": "Retry policy for failed actions",
+          "properties": {
+            "maxRetries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5,
+              "default": 3
+            },
+            "retryDelay": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 60000,
+              "default": 1000,
+              "description": "Delay between retries in milliseconds"
+            },
+            "backoffMultiplier": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 5,
+              "default": 2
+            }
+          }
         },
         "parameters": {
           "type": "object",
@@ -159,76 +509,534 @@
             "category": {
               "type": "integer",
               "minimum": 0,
-              "maximum": 4,
+              "maximum": 9,
               "description": "Category ID for set_classification"
             },
             "label": {
               "type": "string",
               "description": "Label value for set_classification or add_label"
             },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Confidence score for classification"
+            },
             "folder": {
               "type": "string",
-              "description": "Folder path for save_to_folder"
+              "description": "Folder path for save_to_folder or copy_to_folder"
+            },
+            "createFolderIfNotExists": {
+              "type": "boolean",
+              "default": false
             },
             "event": {
-              "type": "object",
-              "description": "Calendar event details",
-              "properties": {
-                "title": { "type": "string" },
-                "startTime": { "type": "string", "format": "date-time" },
-                "endTime": { "type": "string", "format": "date-time" },
-                "location": { "type": "string" },
-                "description": { "type": "string" },
-                "reminder": {
-                  "type": "integer",
-                  "description": "Reminder in minutes"
-                }
-              }
+              "$ref": "#/definitions/calendarEvent"
             },
             "contact": {
-              "type": "object",
-              "description": "Contact information for add_contact",
-              "properties": {
-                "name": { "type": "string" },
-                "emails": {
-                  "type": "array",
-                  "items": { "type": "string", "format": "email" }
-                },
-                "phones": {
-                  "type": "array",
-                  "items": { "type": "string" }
-                },
-                "addresses": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string",
-                        "enum": ["home", "work", "other"]
-                      },
-                      "street": { "type": "string" },
-                      "city": { "type": "string" },
-                      "state": { "type": "string" },
-                      "postalCode": { "type": "string" },
-                      "country": { "type": "string" }
-                    }
-                  }
-                },
-                "company": { "type": "string" },
-                "title": { "type": "string" },
-                "notes": { "type": "string" }
-              }
+              "$ref": "#/definitions/contactInfo"
             },
             "forwardTo": {
               "type": "array",
-              "items": { "type": "string", "format": "email" },
+              "items": {
+                "type": "string",
+                "format": "email"
+              },
               "description": "Email addresses for forward action"
+            },
+            "replyTemplate": {
+              "type": "string",
+              "description": "Template ID or content for auto-reply"
+            },
+            "webhookUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "Webhook URL for trigger_webhook"
+            },
+            "webhookMethod": {
+              "type": "string",
+              "enum": ["GET", "POST", "PUT", "PATCH"],
+              "default": "POST"
+            },
+            "webhookHeaders": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "notificationChannel": {
+              "type": "string",
+              "enum": ["email", "sms", "push", "slack", "teams", "webhook"]
+            },
+            "notificationTemplate": {
+              "type": "string"
             },
             "color": {
               "type": "string",
               "description": "Flag color",
-              "enum": ["red", "orange", "yellow", "green", "blue", "purple"]
+              "enum": [
+                "red",
+                "orange",
+                "yellow",
+                "green",
+                "blue",
+                "purple",
+                "custom"
+              ]
+            },
+            "customColor": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
+            },
+            "scriptId": {
+              "type": "string",
+              "description": "Script identifier for execute_script"
+            },
+            "scriptParameters": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "customFields": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "quarantineReason": {
+              "type": "string",
+              "description": "Reason for quarantine action"
+            },
+            "quarantineDuration": {
+              "type": "integer",
+              "minimum": 3600,
+              "maximum": 2592000,
+              "description": "Quarantine duration in seconds"
+            }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "description": "Action validation rules",
+          "properties": {
+            "requiredPermissions": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "requiredFields": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "validators": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string" },
+                  "regex": { "type": "string" },
+                  "message": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "calendarEvent": {
+      "type": "object",
+      "required": ["title", "startTime", "endTime"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 5000
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "isAllDay": {
+          "type": "boolean",
+          "default": false
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone identifier"
+        },
+        "attendees": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["email"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "type": "boolean",
+                "default": true
+              },
+              "responseStatus": {
+                "type": "string",
+                "enum": ["needsAction", "accepted", "declined", "tentative"]
+              }
+            }
+          }
+        },
+        "reminders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": ["email", "popup", "sms"]
+              },
+              "minutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 40320
+              }
+            }
+          }
+        },
+        "recurrence": {
+          "type": "string",
+          "description": "RRULE format recurrence pattern"
+        },
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public", "private", "confidential"],
+          "default": "private"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["tentative", "confirmed", "cancelled"],
+          "default": "confirmed"
+        }
+      }
+    },
+    "contactInfo": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "firstName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "lastName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "middleName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "nickname": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["address"],
+            "properties": {
+              "address": {
+                "type": "string",
+                "format": "email"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["personal", "work", "other"]
+              },
+              "primary": {
+                "type": "boolean",
+                "default": false
+              },
+              "verified": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "phones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["number"],
+            "properties": {
+              "number": {
+                "type": "string",
+                "pattern": "^[+]?[0-9\\s().-]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["mobile", "home", "work", "fax", "other"]
+              },
+              "primary": {
+                "type": "boolean",
+                "default": false
+              },
+              "verified": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["home", "work", "billing", "shipping", "other"]
+              },
+              "street": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "street2": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "city": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "state": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "postalCode": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "country": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "primary": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "company": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "jobTitle": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
+        },
+        "birthday": {
+          "type": "string",
+          "format": "date"
+        },
+        "anniversary": {
+          "type": "string",
+          "format": "date"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 5000
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "socialProfiles": {
+          "type": "object",
+          "properties": {
+            "linkedin": { "type": "string", "format": "uri" },
+            "twitter": { "type": "string" },
+            "facebook": { "type": "string", "format": "uri" },
+            "instagram": { "type": "string" },
+            "github": { "type": "string" },
+            "skype": { "type": "string" },
+            "whatsapp": { "type": "string" }
+          }
+        },
+        "customFields": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "source": {
+          "type": "string",
+          "enum": ["manual", "email", "import", "api", "sync"],
+          "description": "How the contact was added"
+        },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "doNotEmail": {
+              "type": "boolean",
+              "default": false
+            },
+            "doNotCall": {
+              "type": "boolean",
+              "default": false
+            },
+            "doNotText": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["createdAt", "updatedAt", "environment"],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "publishedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deprecatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "author": {
+          "type": "string"
+        },
+        "approvedBy": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "changeNotes": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["development", "staging", "production"]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "active",
+            "deprecated",
+            "archived"
+          ],
+          "default": "draft"
+        },
+        "qualityMetrics": {
+          "type": "object",
+          "properties": {
+            "coverage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Rule coverage percentage"
+            },
+            "accuracy": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Historical accuracy percentage"
+            },
+            "falsePositiveRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "falseNegativeRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "minimumApiVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "maximumApiVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "requiredTaxonomyVersion": {
+          "type": "string",
+          "pattern": "^v\\d+(\\.\\d+){0,2}$"
+        },
+        "backwardCompatible": {
+          "type": "boolean",
+          "default": true
+        },
+        "migrationRequired": {
+          "type": "boolean",
+          "default": false
+        },
+        "migrationScript": {
+          "type": "string"
+        },
+        "breakingChanges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "impact": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              },
+              "migrationPath": { "type": "string" }
             }
           }
         }

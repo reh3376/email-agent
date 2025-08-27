@@ -1,30 +1,182 @@
 {
+  "$schema": "./schemas/config.schema.json",
+  "version": "1.0.0",
+  "environment": "production",
+  "application": {
+    "name": "Email Assistant",
+    "version": "2.0.0",
+    "description": "Production-ready email processing and classification system",
+    "instanceId": "${INSTANCE_ID}",
+    "deploymentType": "desktop"
+  },
   "stores": {
     "root": "data/",
     "taxonomy": "data/taxonomy_v2.json",
     "ruleset": "data/ruleset_v2.json",
     "contacts": "data/contacts.json",
-    "decisions": "data/decisions/"
+    "decisions": "data/decisions/",
+    "backupPath": "data/backups/",
+    "archivePath": "data/archive/",
+    "tempPath": "data/temp/",
+    "settings": {
+      "autoBackup": true,
+      "backupFrequency": "daily",
+      "backupRetentionDays": 30,
+      "compressionEnabled": true,
+      "encryptionEnabled": false,
+      "maxFileSize": 104857600,
+      "filePermissions": "0600"
+    }
+  },
+  "database": {
+    "decisions": {
+      "type": "ndjson",
+      "settings": {
+        "compression": "gzip",
+        "maxFileSize": 52428800,
+        "rotationPolicy": "daily",
+        "retentionDays": 90,
+        "indexFields": ["messageId", "timestamp", "classification.type"],
+        "enableSearch": true
+      }
+    },
+    "cache": {
+      "type": "memory",
+      "maxSize": 1073741824,
+      "ttl": 3600,
+      "evictionPolicy": "lru"
+    }
   },
   "graphdb": {
     "type": "oxigraph",
-    "dataDir": "data/graph/"
+    "dataDir": "data/graph/",
+    "settings": {
+      "maxSize": 10737418240,
+      "enableFullTextSearch": true,
+      "backupEnabled": true,
+      "backupFrequency": "weekly",
+      "queryTimeout": 30000,
+      "connectionPool": {
+        "min": 2,
+        "max": 10,
+        "idleTimeout": 300000
+      }
+    },
+    "neo4j": {
+      "enabled": false,
+      "uri": "${NEO4J_URI}",
+      "username": "${NEO4J_USERNAME}",
+      "password": "${NEO4J_PASSWORD}",
+      "database": "email-assistant",
+      "connectionPool": {
+        "size": 50,
+        "acquisitionTimeout": 60000
+      }
+    }
   },
   "api": {
     "host": "127.0.0.1",
     "port": 8765,
+    "basePath": "/api/v1",
+    "cors": {
+      "enabled": false,
+      "origins": ["http://localhost:3000"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "allowedHeaders": ["Content-Type", "Authorization"],
+      "credentials": true
+    },
+    "security": {
+      "enabled": true,
+      "apiKeyHeader": "X-API-Key",
+      "apiKeys": "${API_KEYS}",
+      "rateLimit": {
+        "enabled": true,
+        "windowMs": 60000,
+        "maxRequests": 100,
+        "skipSuccessfulRequests": false
+      },
+      "authentication": {
+        "type": "jwt",
+        "jwtSecret": "${JWT_SECRET}",
+        "jwtExpiry": "24h",
+        "refreshTokenExpiry": "7d"
+      }
+    },
+    "compression": {
+      "enabled": true,
+      "level": 6,
+      "threshold": 1024
+    },
+    "timeout": {
+      "request": 30000,
+      "idle": 120000
+    },
+    "maxRequestSize": "50mb",
+    "trustProxy": false,
     "reload": false
   },
   "ml": {
-    "model_path": "src/email_assistant/models/classifier.pt",
-    "n_features": 262144,
-    "epochs": 3,
-    "learning_rate": 0.5
+    "modelPath": "src/email_assistant/models/classifier.pt",
+    "backupModelPath": "src/email_assistant/models/backup/",
+    "settings": {
+      "nFeatures": 262144,
+      "vocabSize": 50000,
+      "embeddingDim": 256,
+      "hiddenDim": 512,
+      "dropout": 0.3,
+      "maxSequenceLength": 1000,
+      "batchSize": 32,
+      "numWorkers": 4
+    },
+    "training": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "minSamples": 1000,
+      "validationSplit": 0.2,
+      "epochs": 10,
+      "learningRate": 0.001,
+      "earlyStoppingPatience": 3,
+      "checkpointFrequency": 1,
+      "optimizer": "adam",
+      "lossFunction": "cross_entropy",
+      "metrics": ["accuracy", "f1_score", "precision", "recall"]
+    },
+    "inference": {
+      "batchTimeout": 100,
+      "maxBatchSize": 64,
+      "cachePredictions": true,
+      "confidenceThreshold": 0.7,
+      "fallbackToRules": true
+    },
+    "llm": {
+      "enabled": true,
+      "provider": "openai",
+      "baseUrl": "${LLM_BASE_URL}",
+      "apiKey": "${LLM_API_KEY}",
+      "model": "gpt-4-turbo",
+      "temperature": 0.3,
+      "maxTokens": 2000,
+      "timeout": 60000,
+      "retryPolicy": {
+        "maxRetries": 3,
+        "initialDelay": 1000,
+        "maxDelay": 10000,
+        "backoffMultiplier": 2
+      },
+      "cache": {
+        "enabled": true,
+        "ttl": 86400,
+        "maxSize": 10000
+      }
+    }
   },
   "attachments": {
     "basePath": "data/attachments",
+    "tempPath": "data/attachments/temp",
+    "quarantinePath": "data/attachments/quarantine",
     "retentionDays": 90,
     "maxFileSizeMB": 25,
+    "totalQuotaGB": 50,
     "allowedMimeTypes": [
       "application/pdf",
       "application/msword",
@@ -33,20 +185,456 @@
       "application/vnd.ms-powerpoint",
       "text/plain",
       "text/csv",
+      "text/html",
+      "text/rtf",
       "image/jpeg",
       "image/png",
       "image/gif",
-      "application/zip"
+      "image/webp",
+      "image/svg+xml",
+      "application/zip",
+      "application/x-rar-compressed",
+      "application/x-7z-compressed"
     ],
-    "blockedExtensions": [".exe", ".bat", ".cmd", ".scr", ".vbs", ".js"]
+    "blockedExtensions": [
+      ".exe",
+      ".bat",
+      ".cmd",
+      ".scr",
+      ".vbs",
+      ".js",
+      ".jar",
+      ".com",
+      ".pif",
+      ".msi",
+      ".app",
+      ".deb",
+      ".rpm"
+    ],
+    "scanSettings": {
+      "enabled": true,
+      "provider": "clamav",
+      "scanOnUpload": true,
+      "quarantineInfected": true,
+      "deleteInfected": false,
+      "maxScanSize": 104857600,
+      "timeout": 30000
+    },
+    "thumbnails": {
+      "enabled": true,
+      "sizes": [64, 128, 256],
+      "quality": 85,
+      "format": "webp"
+    },
+    "deduplication": {
+      "enabled": true,
+      "algorithm": "sha256",
+      "checkExisting": true
+    }
   },
   "reviewTracking": {
+    "enabled": true,
     "defaultThreshold": 3,
-    "enableAutoFlag": true
+    "thresholdByCategory": {
+      "urgent": 1,
+      "action_required": 2,
+      "meetings": 2,
+      "notifications": 5,
+      "fyi": 10
+    },
+    "escalation": {
+      "enabled": true,
+      "levels": [
+        {
+          "threshold": 5,
+          "action": "flag_urgent",
+          "notify": false
+        },
+        {
+          "threshold": 10,
+          "action": "escalate_manager",
+          "notify": true
+        }
+      ]
+    },
+    "autoActions": {
+      "markReviewed": false,
+      "archiveAfterDays": 30,
+      "deleteAfterDays": 90
+    }
+  },
+  "emailProviders": {
+    "primary": {
+      "type": "gmail",
+      "enabled": true,
+      "settings": {
+        "clientId": "${GMAIL_CLIENT_ID}",
+        "clientSecret": "${GMAIL_CLIENT_SECRET}",
+        "refreshToken": "${GMAIL_REFRESH_TOKEN}",
+        "scopes": [
+          "https://www.googleapis.com/auth/gmail.readonly",
+          "https://www.googleapis.com/auth/gmail.modify",
+          "https://www.googleapis.com/auth/gmail.labels"
+        ],
+        "pollInterval": 300,
+        "batchSize": 50,
+        "includeSpam": false,
+        "markAsRead": true,
+        "downloadAttachments": true
+      }
+    },
+    "secondary": {
+      "type": "outlook",
+      "enabled": false,
+      "settings": {
+        "tenantId": "${OUTLOOK_TENANT_ID}",
+        "clientId": "${OUTLOOK_CLIENT_ID}",
+        "clientSecret": "${OUTLOOK_CLIENT_SECRET}",
+        "redirectUri": "http://localhost:8765/auth/callback",
+        "pollInterval": 300,
+        "batchSize": 50
+      }
+    },
+    "imap": {
+      "enabled": false,
+      "settings": {
+        "host": "${IMAP_HOST}",
+        "port": 993,
+        "secure": true,
+        "username": "${IMAP_USERNAME}",
+        "password": "${IMAP_PASSWORD}",
+        "folders": ["INBOX"],
+        "pollInterval": 300,
+        "batchSize": 25
+      }
+    }
+  },
+  "calendarProviders": {
+    "primary": {
+      "type": "google",
+      "enabled": true,
+      "settings": {
+        "clientId": "${GCAL_CLIENT_ID}",
+        "clientSecret": "${GCAL_CLIENT_SECRET}",
+        "refreshToken": "${GCAL_REFRESH_TOKEN}",
+        "calendarId": "primary",
+        "conflictCheckWindow": 30,
+        "bufferMinutes": 15,
+        "workingHours": {
+          "start": "09:00",
+          "end": "17:00",
+          "days": [1, 2, 3, 4, 5]
+        }
+      }
+    },
+    "secondary": {
+      "type": "outlook",
+      "enabled": false,
+      "settings": {
+        "tenantId": "${OUTLOOK_TENANT_ID}",
+        "clientId": "${OUTLOOK_CLIENT_ID}",
+        "clientSecret": "${OUTLOOK_CLIENT_SECRET}",
+        "calendarId": "primary"
+      }
+    }
+  },
+  "fileStorage": {
+    "primary": {
+      "type": "local",
+      "path": "data/files",
+      "maxSize": 107374182400
+    },
+    "cloud": [
+      {
+        "type": "onedrive",
+        "enabled": false,
+        "settings": {
+          "clientId": "${ONEDRIVE_CLIENT_ID}",
+          "clientSecret": "${ONEDRIVE_CLIENT_SECRET}",
+          "redirectUri": "http://localhost:8765/auth/callback",
+          "rootFolder": "/EmailAssistant"
+        }
+      },
+      {
+        "type": "googledrive",
+        "enabled": false,
+        "settings": {
+          "clientId": "${GDRIVE_CLIENT_ID}",
+          "clientSecret": "${GDRIVE_CLIENT_SECRET}",
+          "refreshToken": "${GDRIVE_REFRESH_TOKEN}",
+          "rootFolder": "EmailAssistant"
+        }
+      },
+      {
+        "type": "dropbox",
+        "enabled": false,
+        "settings": {
+          "accessToken": "${DROPBOX_ACCESS_TOKEN}",
+          "rootFolder": "/EmailAssistant"
+        }
+      }
+    ]
+  },
+  "scheduler": {
+    "enabled": true,
+    "defaultSchedule": "0 */15 * * * *",
+    "minInterval": 900,
+    "maxConcurrent": 5,
+    "jobs": {
+      "emailSync": {
+        "enabled": true,
+        "schedule": "0 */5 * * * *",
+        "timeout": 300000,
+        "retryOnFailure": true
+      },
+      "calendarSync": {
+        "enabled": true,
+        "schedule": "0 */30 * * * *",
+        "timeout": 180000
+      },
+      "digestGeneration": {
+        "enabled": true,
+        "schedule": "0 0 8 * * *",
+        "timeout": 600000
+      },
+      "modelTraining": {
+        "enabled": true,
+        "schedule": "0 0 2 * * *",
+        "timeout": 3600000
+      },
+      "cleanup": {
+        "enabled": true,
+        "schedule": "0 0 3 * * *",
+        "timeout": 1800000
+      },
+      "backup": {
+        "enabled": true,
+        "schedule": "0 0 1 * * *",
+        "timeout": 3600000
+      }
+    }
+  },
+  "notifications": {
+    "enabled": true,
+    "channels": {
+      "email": {
+        "enabled": true,
+        "smtp": {
+          "host": "${SMTP_HOST}",
+          "port": 587,
+          "secure": false,
+          "auth": {
+            "user": "${SMTP_USER}",
+            "pass": "${SMTP_PASS}"
+          },
+          "from": "${SMTP_FROM}"
+        },
+        "templates": {
+          "digest": "templates/email/digest.html",
+          "alert": "templates/email/alert.html",
+          "report": "templates/email/report.html"
+        }
+      },
+      "push": {
+        "enabled": false,
+        "provider": "firebase",
+        "config": {
+          "projectId": "${FIREBASE_PROJECT_ID}",
+          "privateKey": "${FIREBASE_PRIVATE_KEY}",
+          "clientEmail": "${FIREBASE_CLIENT_EMAIL}"
+        }
+      },
+      "webhook": {
+        "enabled": false,
+        "endpoints": []
+      }
+    },
+    "preferences": {
+      "digestTime": "08:00",
+      "timezone": "America/Kentucky/Louisville",
+      "language": "en-US",
+      "format": "html"
+    }
+  },
+  "security": {
+    "encryption": {
+      "enabled": true,
+      "algorithm": "aes-256-gcm",
+      "keyDerivation": "pbkdf2",
+      "iterations": 100000,
+      "saltLength": 32
+    },
+    "authentication": {
+      "required": true,
+      "methods": ["password", "biometric", "mfa"],
+      "passwordPolicy": {
+        "minLength": 12,
+        "requireUppercase": true,
+        "requireLowercase": true,
+        "requireNumbers": true,
+        "requireSpecialChars": true,
+        "maxAge": 90,
+        "historyCount": 5
+      },
+      "mfa": {
+        "enabled": false,
+        "type": "totp",
+        "backupCodes": 10
+      },
+      "sessionTimeout": 3600,
+      "rememberMeDuration": 604800
+    },
+    "audit": {
+      "enabled": true,
+      "logLevel": "info",
+      "retention": 365,
+      "events": [
+        "login",
+        "logout",
+        "config_change",
+        "data_access",
+        "data_modification",
+        "rule_execution",
+        "api_access"
+      ]
+    },
+    "privacy": {
+      "anonymizeData": false,
+      "dataRetention": {
+        "decisions": 90,
+        "logs": 30,
+        "attachments": 90,
+        "emails": 365
+      },
+      "gdprCompliant": true,
+      "allowDataExport": true,
+      "allowDataDeletion": true
+    }
+  },
+  "integrations": {
+    "slack": {
+      "enabled": false,
+      "webhookUrl": "${SLACK_WEBHOOK_URL}",
+      "channel": "#email-assistant",
+      "username": "Email Assistant"
+    },
+    "teams": {
+      "enabled": false,
+      "webhookUrl": "${TEAMS_WEBHOOK_URL}"
+    },
+    "zapier": {
+      "enabled": false,
+      "apiKey": "${ZAPIER_API_KEY}"
+    },
+    "ifttt": {
+      "enabled": false,
+      "apiKey": "${IFTTT_API_KEY}"
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "metrics": {
+      "enabled": true,
+      "interval": 60,
+      "retention": 30
+    },
+    "healthCheck": {
+      "enabled": true,
+      "endpoint": "/health",
+      "interval": 30
+    },
+    "telemetry": {
+      "enabled": false,
+      "endpoint": "${TELEMETRY_ENDPOINT}",
+      "apiKey": "${TELEMETRY_API_KEY}",
+      "sampleRate": 0.1
+    },
+    "logging": {
+      "level": "info",
+      "format": "json",
+      "outputs": [
+        {
+          "type": "file",
+          "path": "logs/app.log",
+          "maxSize": "100m",
+          "maxFiles": 10,
+          "compress": true
+        },
+        {
+          "type": "console",
+          "format": "pretty"
+        }
+      ],
+      "categories": {
+        "api": "debug",
+        "ml": "info",
+        "rules": "debug",
+        "email": "info",
+        "security": "warn"
+      }
+    }
+  },
+  "performance": {
+    "caching": {
+      "enabled": true,
+      "redis": {
+        "enabled": false,
+        "host": "${REDIS_HOST}",
+        "port": 6379,
+        "password": "${REDIS_PASSWORD}",
+        "db": 0,
+        "keyPrefix": "email-assistant:"
+      },
+      "memory": {
+        "maxSize": 536870912,
+        "ttl": 3600,
+        "checkPeriod": 600
+      }
+    },
+    "threading": {
+      "emailProcessing": 4,
+      "ruleExecution": 2,
+      "apiWorkers": 8,
+      "backgroundJobs": 2
+    },
+    "limits": {
+      "maxEmailsPerBatch": 100,
+      "maxRulesPerEmail": 50,
+      "maxActionsPerRule": 10,
+      "maxAttachmentSize": 26214400,
+      "maxProcessingTime": 30000,
+      "maxConcurrentRequests": 100
+    }
+  },
+  "features": {
+    "autoClassification": true,
+    "smartReplies": false,
+    "calendarIntegration": true,
+    "contactManagement": true,
+    "attachmentProcessing": true,
+    "spamDetection": true,
+    "phishingDetection": true,
+    "sentimentAnalysis": false,
+    "languageDetection": true,
+    "threadGrouping": true,
+    "duplicateDetection": true,
+    "autoArchive": true,
+    "smartFolders": false,
+    "customFields": true,
+    "webhooks": true,
+    "apiAccess": true,
+    "batchProcessing": true,
+    "realTimeSync": false
   },
   "timezone": "America/Kentucky/Louisville",
-  "logging": {
-    "level": "INFO",
-    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  "locale": "en-US",
+  "dateFormat": "YYYY-MM-DD",
+  "timeFormat": "HH:mm:ss",
+  "currency": "USD",
+  "debug": false,
+  "maintenance": {
+    "mode": false,
+    "message": "System is under maintenance. Please try again later.",
+    "allowedIPs": ["127.0.0.1"]
   }
 }

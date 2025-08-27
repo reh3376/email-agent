@@ -2,73 +2,461 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://email-assistant.local/schemas/taxonomy.json",
   "title": "Email Classification Taxonomy",
-  "description": "Schema for email classification taxonomy with 5 categories",
+  "description": "Production-ready schema for email classification taxonomy with comprehensive validation, extensibility, and governance features",
   "type": "object",
-  "required": ["type", "version", "categories"],
+  "required": ["type", "version", "categories", "metadata"],
   "properties": {
     "type": {
       "type": "string",
       "const": "email_categories",
-      "description": "Type identifier for taxonomy"
+      "description": "Type identifier for taxonomy - must be 'email_categories'"
     },
     "version": {
       "type": "string",
-      "pattern": "^v\\d+$",
-      "description": "Version identifier (e.g., v2)"
+      "pattern": "^v\\d+(\\.\\d+){0,2}(-[a-zA-Z0-9]+)?$",
+      "description": "Semantic version identifier (e.g., v2, v2.1, v2.1.0, v2.1.0-beta)",
+      "examples": ["v2", "v2.1", "v2.1.0", "v2.1.0-beta"]
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Version of this schema specification"
     },
     "categories": {
       "type": "array",
-      "description": "List of classification categories",
+      "description": "List of classification categories with strict ordering and validation",
       "minItems": 5,
-      "maxItems": 5,
+      "maxItems": 10,
       "items": {
         "type": "object",
-        "required": ["id", "name", "labels"],
+        "required": ["id", "name", "labels", "metadata"],
         "properties": {
           "id": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 4,
-            "description": "Category ID (0-4)"
+            "maximum": 9,
+            "description": "Category ID (0-9) - immutable once assigned"
           },
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Category name"
+            "maxLength": 50,
+            "pattern": "^[a-zA-Z0-9\\s\\-_]+$",
+            "description": "Category name - human readable, unique identifier"
           },
-          "labels": {
-            "type": "array",
-            "description": "Available labels for this category",
-            "minItems": 1,
-            "items": {
-              "type": "string",
-              "minLength": 1
-            },
-            "uniqueItems": true
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name for UI presentation"
           },
           "description": {
             "type": "string",
-            "description": "Optional description of the category"
+            "maxLength": 500,
+            "description": "Detailed description of the category's purpose and usage"
+          },
+          "labels": {
+            "type": "array",
+            "description": "Available classification labels for this category",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "^[a-zA-Z0-9\\s\\-_/]+$",
+              "description": "Individual label value"
+            },
+            "uniqueItems": true
+          },
+          "labelGroups": {
+            "type": "array",
+            "description": "Optional grouping of labels for better organization",
+            "items": {
+              "type": "object",
+              "required": ["name", "labels"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Group name"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Group description"
+                },
+                "labels": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Labels in this group"
+                }
+              }
+            }
+          },
+          "required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether classification for this category is mandatory"
+          },
+          "allowCustomLabels": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether users can add custom labels at runtime"
+          },
+          "defaultLabel": {
+            "type": "string",
+            "description": "Default label if none is selected"
+          },
+          "constraints": {
+            "type": "object",
+            "description": "Category-specific constraints and validation rules",
+            "properties": {
+              "mutuallyExclusive": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether only one label can be selected"
+              },
+              "maxSelections": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Maximum number of labels that can be selected"
+              },
+              "requiredConfidenceThreshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Minimum confidence score required for auto-classification"
+              },
+              "validationRegex": {
+                "type": "string",
+                "description": "Additional regex validation for custom labels"
+              }
+            }
+          },
+          "uiHints": {
+            "type": "object",
+            "description": "UI presentation hints",
+            "properties": {
+              "displayOrder": {
+                "type": "integer",
+                "description": "Display order in UI"
+              },
+              "icon": {
+                "type": "string",
+                "description": "Icon identifier for UI"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "Hex color code for UI theming"
+              },
+              "inputType": {
+                "type": "string",
+                "enum": [
+                  "dropdown",
+                  "radio",
+                  "checkbox",
+                  "tags",
+                  "autocomplete"
+                ],
+                "default": "dropdown",
+                "description": "Preferred input control type"
+              },
+              "hidden": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether to hide in standard UI"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "required": ["createdAt", "updatedAt"],
+            "properties": {
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Category creation timestamp"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Last modification timestamp"
+              },
+              "createdBy": {
+                "type": "string",
+                "description": "User/system that created the category"
+              },
+              "updatedBy": {
+                "type": "string",
+                "description": "User/system that last updated the category"
+              },
+              "changeHistory": {
+                "type": "array",
+                "description": "Audit trail of changes",
+                "items": {
+                  "type": "object",
+                  "required": ["timestamp", "action", "user"],
+                  "properties": {
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "created",
+                        "updated",
+                        "label_added",
+                        "label_removed",
+                        "renamed"
+                      ]
+                    },
+                    "user": {
+                      "type": "string"
+                    },
+                    "changes": {
+                      "type": "object",
+                      "description": "Details of what changed"
+                    }
+                  }
+                }
+              },
+              "usageStats": {
+                "type": "object",
+                "description": "Usage statistics for this category",
+                "properties": {
+                  "totalClassifications": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "labelDistribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "lastUsed": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          },
+          "integrations": {
+            "type": "object",
+            "description": "External system integration mappings",
+            "properties": {
+              "outlook": {
+                "type": "object",
+                "properties": {
+                  "categoryName": { "type": "string" },
+                  "colorCode": { "type": "string" }
+                }
+              },
+              "gmail": {
+                "type": "object",
+                "properties": {
+                  "labelName": { "type": "string" },
+                  "labelId": { "type": "string" }
+                }
+              },
+              "exchange": {
+                "type": "object",
+                "properties": {
+                  "propertyName": { "type": "string" },
+                  "propertyId": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "categoryOrder": {
+      "type": "array",
+      "description": "Explicit ordering of category IDs for processing",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9
+      },
+      "uniqueItems": true
+    },
+    "labelMappings": {
+      "type": "object",
+      "description": "Cross-category label relationships and mappings",
+      "properties": {
+        "synonyms": {
+          "type": "object",
+          "description": "Label synonyms for normalization",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "implications": {
+          "type": "array",
+          "description": "Label implication rules",
+          "items": {
+            "type": "object",
+            "required": ["if", "then"],
+            "properties": {
+              "if": {
+                "type": "object",
+                "properties": {
+                  "categoryId": { "type": "integer" },
+                  "label": { "type": "string" }
+                }
+              },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "categoryId": { "type": "integer" },
+                  "label": { "type": "string" },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            }
           }
         }
       }
     },
     "metadata": {
       "type": "object",
-      "description": "Optional metadata",
+      "required": ["createdAt", "updatedAt", "environment"],
       "properties": {
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "Taxonomy creation timestamp"
         },
         "updatedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "Last modification timestamp"
+        },
+        "publishedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this version was published for use"
+        },
+        "deprecatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this version was deprecated"
         },
         "author": {
-          "type": "string"
+          "type": "string",
+          "description": "User/system that created this taxonomy"
+        },
+        "approvedBy": {
+          "type": "string",
+          "description": "User who approved this taxonomy for production"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of this taxonomy version"
+        },
+        "changeNotes": {
+          "type": "string",
+          "description": "Release notes for this version"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for taxonomy organization",
+          "items": { "type": "string" }
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["development", "staging", "production"],
+          "description": "Target environment for this taxonomy"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "review",
+            "approved",
+            "active",
+            "deprecated",
+            "archived"
+          ],
+          "default": "draft",
+          "description": "Lifecycle status of this taxonomy"
+        },
+        "validationResults": {
+          "type": "object",
+          "description": "Results of taxonomy validation",
+          "properties": {
+            "validatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "validatedBy": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "message": { "type": "string" },
+                  "path": { "type": "string" }
+                }
+              }
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "message": { "type": "string" },
+                  "path": { "type": "string" }
+                }
+              }
+            }
+          }
         }
       }
+    },
+    "compatibility": {
+      "type": "object",
+      "description": "Compatibility information with other system versions",
+      "properties": {
+        "minimumApiVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Minimum API version required"
+        },
+        "maximumApiVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Maximum API version supported"
+        },
+        "backwardCompatible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this version is backward compatible"
+        },
+        "migrationRequired": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether data migration is required from previous version"
+        },
+        "migrationScript": {
+          "type": "string",
+          "description": "Reference to migration script if required"
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Extension point for custom properties",
+      "additionalProperties": true
     }
   },
   "additionalProperties": false

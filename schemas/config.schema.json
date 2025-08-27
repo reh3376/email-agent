@@ -1,0 +1,766 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://email-assistant.local/schemas/config.json",
+  "title": "Application Configuration",
+  "description": "Production-ready schema for Email Assistant application configuration with comprehensive validation",
+  "type": "object",
+  "required": [
+    "version",
+    "environment",
+    "application",
+    "stores",
+    "api",
+    "ml",
+    "timezone"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Configuration schema version"
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production", "test"],
+      "description": "Deployment environment"
+    },
+    "application": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$"
+        },
+        "description": { "type": "string" },
+        "instanceId": { "type": "string" },
+        "deploymentType": {
+          "type": "string",
+          "enum": ["desktop", "server", "cloud", "container"]
+        }
+      }
+    },
+    "stores": {
+      "type": "object",
+      "required": ["root", "taxonomy", "ruleset", "contacts", "decisions"],
+      "properties": {
+        "root": { "type": "string" },
+        "taxonomy": { "type": "string" },
+        "ruleset": { "type": "string" },
+        "contacts": { "type": "string" },
+        "decisions": { "type": "string" },
+        "backupPath": { "type": "string" },
+        "archivePath": { "type": "string" },
+        "tempPath": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "autoBackup": { "type": "boolean" },
+            "backupFrequency": {
+              "type": "string",
+              "enum": ["hourly", "daily", "weekly", "monthly"]
+            },
+            "backupRetentionDays": { "type": "integer", "minimum": 1 },
+            "compressionEnabled": { "type": "boolean" },
+            "encryptionEnabled": { "type": "boolean" },
+            "maxFileSize": { "type": "integer", "minimum": 1048576 },
+            "filePermissions": { "type": "string", "pattern": "^0[0-7]{3}$" }
+          }
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "properties": {
+        "decisions": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["ndjson", "sqlite", "postgres"]
+            },
+            "settings": { "type": "object" }
+          }
+        },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["memory", "redis", "memcached"]
+            },
+            "maxSize": { "type": "integer", "minimum": 1048576 },
+            "ttl": { "type": "integer", "minimum": 0 },
+            "evictionPolicy": {
+              "type": "string",
+              "enum": ["lru", "lfu", "fifo", "ttl"]
+            }
+          }
+        }
+      }
+    },
+    "graphdb": {
+      "type": "object",
+      "required": ["type", "dataDir"],
+      "properties": {
+        "type": { "type": "string", "enum": ["oxigraph", "neo4j"] },
+        "dataDir": { "type": "string" },
+        "settings": { "type": "object" },
+        "neo4j": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "uri": { "type": "string" },
+            "username": { "type": "string" },
+            "password": { "type": "string" },
+            "database": { "type": "string" },
+            "connectionPool": { "type": "object" }
+          }
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "required": ["host", "port"],
+      "properties": {
+        "host": { "type": "string", "format": "hostname" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "basePath": { "type": "string" },
+        "cors": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "origins": { "type": "array", "items": { "type": "string" } },
+            "methods": { "type": "array", "items": { "type": "string" } },
+            "allowedHeaders": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "credentials": { "type": "boolean" }
+          }
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "apiKeyHeader": { "type": "string" },
+            "apiKeys": { "type": "string" },
+            "rateLimit": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "windowMs": { "type": "integer", "minimum": 1000 },
+                "maxRequests": { "type": "integer", "minimum": 1 },
+                "skipSuccessfulRequests": { "type": "boolean" }
+              }
+            },
+            "authentication": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["jwt", "oauth2", "basic", "apikey"]
+                },
+                "jwtSecret": { "type": "string" },
+                "jwtExpiry": { "type": "string" },
+                "refreshTokenExpiry": { "type": "string" }
+              }
+            }
+          }
+        },
+        "compression": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "level": { "type": "integer", "minimum": 0, "maximum": 9 },
+            "threshold": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "timeout": {
+          "type": "object",
+          "properties": {
+            "request": { "type": "integer", "minimum": 1000 },
+            "idle": { "type": "integer", "minimum": 1000 }
+          }
+        },
+        "maxRequestSize": { "type": "string" },
+        "trustProxy": { "type": "boolean" },
+        "reload": { "type": "boolean" }
+      }
+    },
+    "ml": {
+      "type": "object",
+      "required": ["modelPath"],
+      "properties": {
+        "modelPath": { "type": "string" },
+        "backupModelPath": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "nFeatures": { "type": "integer", "minimum": 1000 },
+            "vocabSize": { "type": "integer", "minimum": 1000 },
+            "embeddingDim": { "type": "integer", "minimum": 32 },
+            "hiddenDim": { "type": "integer", "minimum": 32 },
+            "dropout": { "type": "number", "minimum": 0, "maximum": 1 },
+            "maxSequenceLength": { "type": "integer", "minimum": 100 },
+            "batchSize": { "type": "integer", "minimum": 1 },
+            "numWorkers": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "training": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "schedule": { "type": "string" },
+            "minSamples": { "type": "integer", "minimum": 100 },
+            "validationSplit": { "type": "number", "minimum": 0, "maximum": 1 },
+            "epochs": { "type": "integer", "minimum": 1 },
+            "learningRate": { "type": "number", "minimum": 0 },
+            "earlyStoppingPatience": { "type": "integer", "minimum": 1 },
+            "checkpointFrequency": { "type": "integer", "minimum": 1 },
+            "optimizer": {
+              "type": "string",
+              "enum": ["adam", "sgd", "rmsprop", "adamw"]
+            },
+            "lossFunction": {
+              "type": "string",
+              "enum": ["cross_entropy", "mse", "mae", "bce"]
+            },
+            "metrics": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "inference": {
+          "type": "object",
+          "properties": {
+            "batchTimeout": { "type": "integer", "minimum": 10 },
+            "maxBatchSize": { "type": "integer", "minimum": 1 },
+            "cachePredictions": { "type": "boolean" },
+            "confidenceThreshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "fallbackToRules": { "type": "boolean" }
+          }
+        },
+        "llm": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "provider": { "type": "string" },
+            "baseUrl": { "type": "string" },
+            "apiKey": { "type": "string" },
+            "model": { "type": "string" },
+            "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+            "maxTokens": { "type": "integer", "minimum": 1 },
+            "timeout": { "type": "integer", "minimum": 1000 },
+            "retryPolicy": { "type": "object" },
+            "cache": { "type": "object" }
+          }
+        }
+      }
+    },
+    "attachments": {
+      "type": "object",
+      "required": ["basePath", "retentionDays", "maxFileSizeMB"],
+      "properties": {
+        "basePath": { "type": "string" },
+        "tempPath": { "type": "string" },
+        "quarantinePath": { "type": "string" },
+        "retentionDays": { "type": "integer", "minimum": 1 },
+        "maxFileSizeMB": { "type": "number", "minimum": 1 },
+        "totalQuotaGB": { "type": "number", "minimum": 1 },
+        "allowedMimeTypes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "blockedExtensions": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^\\.[a-zA-Z0-9]+$" }
+        },
+        "scanSettings": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "provider": { "type": "string" },
+            "scanOnUpload": { "type": "boolean" },
+            "quarantineInfected": { "type": "boolean" },
+            "deleteInfected": { "type": "boolean" },
+            "maxScanSize": { "type": "integer", "minimum": 1048576 },
+            "timeout": { "type": "integer", "minimum": 1000 }
+          }
+        },
+        "thumbnails": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "sizes": {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 16, "maximum": 2048 }
+            },
+            "quality": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "format": { "type": "string", "enum": ["jpeg", "png", "webp"] }
+          }
+        },
+        "deduplication": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "algorithm": {
+              "type": "string",
+              "enum": ["md5", "sha1", "sha256", "sha512"]
+            },
+            "checkExisting": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "reviewTracking": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "defaultThreshold": { "type": "integer", "minimum": 1 },
+        "thresholdByCategory": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "escalation": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "levels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["threshold", "action"],
+                "properties": {
+                  "threshold": { "type": "integer", "minimum": 1 },
+                  "action": { "type": "string" },
+                  "notify": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "autoActions": {
+          "type": "object",
+          "properties": {
+            "markReviewed": { "type": "boolean" },
+            "archiveAfterDays": { "type": "integer", "minimum": 1 },
+            "deleteAfterDays": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "emailProviders": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "required": ["type", "enabled"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["gmail", "outlook", "exchange", "imap"]
+            },
+            "enabled": { "type": "boolean" },
+            "settings": { "type": "object" }
+          }
+        },
+        "secondary": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["gmail", "outlook", "exchange", "imap"]
+            },
+            "enabled": { "type": "boolean" },
+            "settings": { "type": "object" }
+          }
+        },
+        "imap": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "settings": {
+              "type": "object",
+              "properties": {
+                "host": { "type": "string", "format": "hostname" },
+                "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                "secure": { "type": "boolean" },
+                "username": { "type": "string" },
+                "password": { "type": "string" },
+                "folders": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "pollInterval": { "type": "integer", "minimum": 60 },
+                "batchSize": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "calendarProviders": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "required": ["type", "enabled"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["google", "outlook", "caldav"]
+            },
+            "enabled": { "type": "boolean" },
+            "settings": { "type": "object" }
+          }
+        },
+        "secondary": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["google", "outlook", "caldav"]
+            },
+            "enabled": { "type": "boolean" },
+            "settings": { "type": "object" }
+          }
+        }
+      }
+    },
+    "fileStorage": {
+      "type": "object",
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["local", "s3", "azure", "gcs"]
+            },
+            "path": { "type": "string" },
+            "maxSize": { "type": "integer", "minimum": 1073741824 }
+          }
+        },
+        "cloud": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "enabled"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["onedrive", "googledrive", "dropbox", "box"]
+              },
+              "enabled": { "type": "boolean" },
+              "settings": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "scheduler": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "defaultSchedule": { "type": "string" },
+        "minInterval": { "type": "integer", "minimum": 60 },
+        "maxConcurrent": { "type": "integer", "minimum": 1 },
+        "jobs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["enabled", "schedule"],
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "schedule": { "type": "string" },
+              "timeout": { "type": "integer", "minimum": 1000 },
+              "retryOnFailure": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "channels": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "smtp": { "type": "object" },
+                "templates": { "type": "object" }
+              }
+            },
+            "push": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "provider": { "type": "string" },
+                "config": { "type": "object" }
+              }
+            },
+            "webhook": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "endpoints": {
+                  "type": "array",
+                  "items": { "type": "string", "format": "uri" }
+                }
+              }
+            }
+          }
+        },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "digestTime": {
+              "type": "string",
+              "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "timezone": { "type": "string" },
+            "language": { "type": "string" },
+            "format": { "type": "string", "enum": ["html", "text", "markdown"] }
+          }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "encryption": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "algorithm": { "type": "string" },
+            "keyDerivation": { "type": "string" },
+            "iterations": { "type": "integer", "minimum": 10000 },
+            "saltLength": { "type": "integer", "minimum": 16 }
+          }
+        },
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["password", "biometric", "mfa", "sso"]
+              }
+            },
+            "passwordPolicy": { "type": "object" },
+            "mfa": { "type": "object" },
+            "sessionTimeout": { "type": "integer", "minimum": 60 },
+            "rememberMeDuration": { "type": "integer", "minimum": 3600 }
+          }
+        },
+        "audit": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "logLevel": {
+              "type": "string",
+              "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+            },
+            "retention": { "type": "integer", "minimum": 1 },
+            "events": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "privacy": {
+          "type": "object",
+          "properties": {
+            "anonymizeData": { "type": "boolean" },
+            "dataRetention": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 1 }
+            },
+            "gdprCompliant": { "type": "boolean" },
+            "allowDataExport": { "type": "boolean" },
+            "allowDataDeletion": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "webhookUrl": { "type": "string", "format": "uri" },
+          "apiKey": { "type": "string" },
+          "channel": { "type": "string" },
+          "username": { "type": "string" }
+        }
+      }
+    },
+    "monitoring": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "interval": { "type": "integer", "minimum": 10 },
+            "retention": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "healthCheck": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpoint": { "type": "string" },
+            "interval": { "type": "integer", "minimum": 10 }
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpoint": { "type": "string", "format": "uri" },
+            "apiKey": { "type": "string" },
+            "sampleRate": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "logging": {
+          "type": "object",
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+            },
+            "format": { "type": "string", "enum": ["json", "text", "pretty"] },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["type"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["file", "console", "syslog", "eventlog"]
+                  },
+                  "path": { "type": "string" },
+                  "maxSize": { "type": "string" },
+                  "maxFiles": { "type": "integer", "minimum": 1 },
+                  "compress": { "type": "boolean" },
+                  "format": { "type": "string" }
+                }
+              }
+            },
+            "categories": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "enum": [
+                  "trace",
+                  "debug",
+                  "info",
+                  "warn",
+                  "error",
+                  "fatal",
+                  "off"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "caching": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "redis": { "type": "object" },
+            "memory": {
+              "type": "object",
+              "properties": {
+                "maxSize": { "type": "integer", "minimum": 1048576 },
+                "ttl": { "type": "integer", "minimum": 0 },
+                "checkPeriod": { "type": "integer", "minimum": 60 }
+              }
+            }
+          }
+        },
+        "threading": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "maxEmailsPerBatch": { "type": "integer", "minimum": 1 },
+            "maxRulesPerEmail": { "type": "integer", "minimum": 1 },
+            "maxActionsPerRule": { "type": "integer", "minimum": 1 },
+            "maxAttachmentSize": { "type": "integer", "minimum": 1048576 },
+            "maxProcessingTime": { "type": "integer", "minimum": 1000 },
+            "maxConcurrentRequests": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone identifier"
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+    },
+    "dateFormat": {
+      "type": "string"
+    },
+    "timeFormat": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "debug": {
+      "type": "boolean"
+    },
+    "maintenance": {
+      "type": "object",
+      "properties": {
+        "mode": { "type": "boolean" },
+        "message": { "type": "string" },
+        "allowedIPs": {
+          "type": "array",
+          "items": { "type": "string", "format": "ipv4" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

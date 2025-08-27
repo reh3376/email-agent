@@ -1,156 +1,1083 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://email-assistant.local/schemas/contacts.json",
-  "title": "Contact List",
-  "description": "Schema for contact information storage",
-  "type": "array",
-  "items": {
-    "$ref": "#/definitions/contact"
+  "title": "Contact Database",
+  "description": "Production-ready schema for comprehensive contact information management with validation, privacy controls, and integration support",
+  "type": "object",
+  "required": ["version", "contacts", "metadata"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^v\\d+(\\.\\d+){0,2}(-[a-zA-Z0-9]+)?$",
+      "description": "Schema version identifier",
+      "examples": ["v1", "v1.0", "v1.0.0"]
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Version of this schema specification"
+    },
+    "contacts": {
+      "type": "array",
+      "description": "List of contacts",
+      "items": {
+        "$ref": "#/definitions/contact"
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Contact groups for organization",
+      "items": {
+        "$ref": "#/definitions/contactGroup"
+      }
+    },
+    "metadata": {
+      "$ref": "#/definitions/metadata"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Contact database settings",
+      "properties": {
+        "duplicateHandling": {
+          "type": "string",
+          "enum": ["merge", "keep_both", "replace", "ignore"],
+          "default": "merge",
+          "description": "How to handle duplicate contacts"
+        },
+        "defaultCountry": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "Default country code (ISO 3166-1 alpha-2)"
+        },
+        "defaultTimezone": {
+          "type": "string",
+          "description": "Default timezone for contacts"
+        },
+        "privacyDefaults": {
+          "$ref": "#/definitions/privacySettings"
+        },
+        "validationRules": {
+          "type": "object",
+          "properties": {
+            "requireEmail": {
+              "type": "boolean",
+              "default": true
+            },
+            "requirePhone": {
+              "type": "boolean",
+              "default": false
+            },
+            "validateEmails": {
+              "type": "boolean",
+              "default": true
+            },
+            "validatePhones": {
+              "type": "boolean",
+              "default": true
+            },
+            "allowInternationalPhones": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      }
+    }
   },
   "definitions": {
     "contact": {
       "type": "object",
-      "required": ["id", "name", "emails"],
+      "required": ["id", "name"],
       "properties": {
         "id": {
           "type": "string",
           "pattern": "^[a-zA-Z0-9_-]+$",
-          "description": "Unique contact identifier"
+          "description": "Unique contact identifier (UUID recommended)"
+        },
+        "externalIds": {
+          "type": "object",
+          "description": "External system identifiers",
+          "properties": {
+            "outlook": { "type": "string" },
+            "gmail": { "type": "string" },
+            "exchange": { "type": "string" },
+            "salesforce": { "type": "string" },
+            "hubspot": { "type": "string" },
+            "custom": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          }
         },
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "Contact's full name"
+          "maxLength": 200,
+          "description": "Full name (display name)"
         },
-        "firstName": {
-          "type": "string",
-          "description": "Contact's first name"
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Contact's last name"
-        },
-        "emails": {
-          "type": "array",
-          "description": "Email addresses",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "required": ["address"],
-            "properties": {
-              "address": {
-                "type": "string",
-                "format": "email"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["personal", "work", "other"],
-                "default": "personal"
-              },
-              "primary": {
-                "type": "boolean",
-                "default": false
+        "nameComponents": {
+          "type": "object",
+          "description": "Structured name components",
+          "properties": {
+            "prefix": {
+              "type": "string",
+              "maxLength": 20,
+              "examples": ["Mr.", "Ms.", "Dr.", "Prof."]
+            },
+            "firstName": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "middleName": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "lastName": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "suffix": {
+              "type": "string",
+              "maxLength": 20,
+              "examples": ["Jr.", "Sr.", "III", "Ph.D."]
+            },
+            "nickname": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "maidenName": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "phonetic": {
+              "type": "object",
+              "properties": {
+                "firstName": { "type": "string" },
+                "lastName": { "type": "string" },
+                "company": { "type": "string" }
               }
             }
           }
         },
+        "emails": {
+          "type": "array",
+          "description": "Email addresses with metadata",
+          "items": {
+            "$ref": "#/definitions/emailAddress"
+          }
+        },
         "phones": {
           "type": "array",
-          "description": "Phone numbers",
+          "description": "Phone numbers with metadata",
           "items": {
-            "type": "object",
-            "required": ["number"],
-            "properties": {
-              "number": {
-                "type": "string",
-                "pattern": "^[+]?[0-9\\s()-]+$"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["mobile", "home", "work", "other"],
-                "default": "mobile"
-              },
-              "primary": {
-                "type": "boolean",
-                "default": false
-              }
-            }
+            "$ref": "#/definitions/phoneNumber"
           }
         },
         "addresses": {
           "type": "array",
           "description": "Physical addresses",
           "items": {
+            "$ref": "#/definitions/physicalAddress"
+          }
+        },
+        "organization": {
+          "$ref": "#/definitions/organization"
+        },
+        "personalInfo": {
+          "$ref": "#/definitions/personalInfo"
+        },
+        "socialProfiles": {
+          "$ref": "#/definitions/socialProfiles"
+        },
+        "communicationPreferences": {
+          "$ref": "#/definitions/communicationPreferences"
+        },
+        "relationships": {
+          "type": "array",
+          "description": "Relationships to other contacts",
+          "items": {
             "type": "object",
+            "required": ["contactId", "type"],
             "properties": {
+              "contactId": {
+                "type": "string",
+                "description": "Related contact ID"
+              },
               "type": {
                 "type": "string",
-                "enum": ["home", "work", "other"],
-                "default": "home"
+                "enum": [
+                  "spouse",
+                  "child",
+                  "parent",
+                  "sibling",
+                  "assistant",
+                  "manager",
+                  "colleague",
+                  "referral",
+                  "custom"
+                ]
               },
-              "street": {
-                "type": "string"
+              "customType": {
+                "type": "string",
+                "maxLength": 50
               },
-              "street2": {
-                "type": "string"
-              },
-              "city": {
-                "type": "string"
-              },
-              "state": {
-                "type": "string"
-              },
-              "postalCode": {
-                "type": "string"
-              },
-              "country": {
-                "type": "string"
-              },
-              "primary": {
-                "type": "boolean",
-                "default": false
+              "notes": {
+                "type": "string",
+                "maxLength": 500
               }
             }
           }
-        },
-        "company": {
-          "type": "string",
-          "description": "Company or organization name"
-        },
-        "title": {
-          "type": "string",
-          "description": "Job title"
-        },
-        "department": {
-          "type": "string",
-          "description": "Department"
-        },
-        "notes": {
-          "type": "string",
-          "description": "Additional notes"
         },
         "tags": {
           "type": "array",
           "description": "Tags for categorization",
           "items": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "uniqueItems": true,
+          "maxItems": 50
+        },
+        "groups": {
+          "type": "array",
+          "description": "Group memberships",
+          "items": {
+            "type": "string",
+            "description": "Group ID"
           },
           "uniqueItems": true
         },
-        "socialProfiles": {
+        "notes": {
+          "type": "string",
+          "maxLength": 10000,
+          "description": "Free-form notes about the contact"
+        },
+        "customFields": {
           "type": "object",
-          "description": "Social media profiles",
-          "properties": {
-            "linkedin": { "type": "string", "format": "uri" },
-            "twitter": { "type": "string" },
-            "facebook": { "type": "string", "format": "uri" },
-            "instagram": { "type": "string" },
-            "github": { "type": "string" }
+          "description": "Custom fields for extensibility",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string", "maxLength": 1000 },
+              { "type": "number" },
+              { "type": "boolean" },
+              {
+                "type": "array",
+                "items": { "type": "string" },
+                "maxItems": 100
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "value": {},
+                  "label": { "type": "string" },
+                  "type": { "type": "string" }
+                }
+              }
+            ]
+          },
+          "maxProperties": 100
+        },
+        "metadata": {
+          "$ref": "#/definitions/contactMetadata"
+        },
+        "privacy": {
+          "$ref": "#/definitions/privacySettings"
+        },
+        "quality": {
+          "$ref": "#/definitions/dataQuality"
+        }
+      }
+    },
+    "emailAddress": {
+      "type": "object",
+      "required": ["address"],
+      "properties": {
+        "address": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "type": {
+          "type": "string",
+          "enum": ["personal", "work", "school", "other", "custom"],
+          "default": "personal"
+        },
+        "customType": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Display label for this email"
+        },
+        "primary": {
+          "type": "boolean",
+          "default": false
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false,
+          "description": "Email verification status"
+        },
+        "verifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "doNotEmail": {
+          "type": "boolean",
+          "default": false
+        },
+        "bounced": {
+          "type": "boolean",
+          "default": false
+        },
+        "bouncedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastUsed": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "phoneNumber": {
+      "type": "object",
+      "required": ["number"],
+      "properties": {
+        "number": {
+          "type": "string",
+          "pattern": "^[+]?[0-9\\s().,-]+$",
+          "maxLength": 50
+        },
+        "type": {
+          "type": "string",
+          "enum": ["mobile", "home", "work", "fax", "pager", "other", "custom"],
+          "default": "mobile"
+        },
+        "customType": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "countryCode": {
+          "type": "string",
+          "pattern": "^\\+[0-9]{1,4}$"
+        },
+        "extension": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "primary": {
+          "type": "boolean",
+          "default": false
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false
+        },
+        "verifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "canReceiveSms": {
+          "type": "boolean",
+          "default": false
+        },
+        "canReceiveVoice": {
+          "type": "boolean",
+          "default": true
+        },
+        "doNotCall": {
+          "type": "boolean",
+          "default": false
+        },
+        "doNotText": {
+          "type": "boolean",
+          "default": false
+        },
+        "lastUsed": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "physicalAddress": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["home", "work", "billing", "shipping", "other", "custom"],
+          "default": "home"
+        },
+        "customType": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "street": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "street2": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "street3": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "postalCode": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "country": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "countryCode": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "ISO 3166-1 alpha-2 country code"
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA timezone identifier"
+        },
+        "primary": {
+          "type": "boolean",
+          "default": false
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false
+        },
+        "verifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "doNotMail": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "organization": {
+      "type": "object",
+      "properties": {
+        "company": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "jobTitle": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "industry": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "employeeId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "manager": {
+          "type": "string",
+          "description": "Manager's contact ID or name"
+        },
+        "assistant": {
+          "type": "string",
+          "description": "Assistant's contact ID or name"
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "isCurrent": {
+          "type": "boolean",
+          "default": true
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
+        },
+        "linkedinCompanyId": {
+          "type": "string"
+        }
+      }
+    },
+    "personalInfo": {
+      "type": "object",
+      "properties": {
+        "birthday": {
+          "type": "string",
+          "format": "date"
+        },
+        "anniversary": {
+          "type": "string",
+          "format": "date"
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["male", "female", "other", "prefer_not_to_say"]
+        },
+        "pronouns": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "maritalStatus": {
+          "type": "string",
+          "enum": [
+            "single",
+            "married",
+            "divorced",
+            "widowed",
+            "partnered",
+            "other"
+          ]
+        },
+        "nationality": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+                "description": "ISO 639-1 language code"
+              },
+              "name": {
+                "type": "string"
+              },
+              "proficiency": {
+                "type": "string",
+                "enum": [
+                  "native",
+                  "fluent",
+                  "professional",
+                  "conversational",
+                  "basic"
+                ]
+              }
+            }
           }
+        },
+        "interests": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 50
+        },
+        "significantDates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "label"],
+            "properties": {
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "label": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "recurring": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "socialProfiles": {
+      "type": "object",
+      "properties": {
+        "linkedin": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[a-z]{2,}\\.linkedin\\.com/.*"
+        },
+        "twitter": {
+          "type": "string",
+          "pattern": "^@?[a-zA-Z0-9_]{1,15}$"
+        },
+        "facebook": {
+          "type": "string",
+          "format": "uri"
+        },
+        "instagram": {
+          "type": "string",
+          "pattern": "^@?[a-zA-Z0-9_.]{1,30}$"
+        },
+        "github": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9-]{1,39}$"
+        },
+        "youtube": {
+          "type": "string",
+          "format": "uri"
+        },
+        "tiktok": {
+          "type": "string",
+          "pattern": "^@?[a-zA-Z0-9_.]{1,24}$"
+        },
+        "whatsapp": {
+          "type": "string",
+          "pattern": "^[+]?[0-9\\s()-]+$"
+        },
+        "telegram": {
+          "type": "string"
+        },
+        "skype": {
+          "type": "string"
+        },
+        "wechat": {
+          "type": "string"
+        },
+        "custom": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "username": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "communicationPreferences": {
+      "type": "object",
+      "properties": {
+        "preferredChannel": {
+          "type": "string",
+          "enum": ["email", "phone", "sms", "whatsapp", "mail", "inPerson"]
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "pattern": "^[a-z]{2}(-[A-Z]{2})?$"
+        },
+        "preferredTime": {
+          "type": "object",
+          "properties": {
+            "timezone": {
+              "type": "string"
+            },
+            "days": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "monday",
+                  "tuesday",
+                  "wednesday",
+                  "thursday",
+                  "friday",
+                  "saturday",
+                  "sunday"
+                ]
+              }
+            },
+            "startTime": {
+              "type": "string",
+              "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "endTime": {
+              "type": "string",
+              "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+            }
+          }
+        },
+        "emailFrequency": {
+          "type": "string",
+          "enum": ["immediate", "daily", "weekly", "monthly", "never"]
+        },
+        "marketingConsent": {
+          "type": "boolean",
+          "default": false
+        },
+        "marketingConsentDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "newsletterSubscriptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "contactMetadata": {
+      "type": "object",
+      "required": ["createdAt", "updatedAt"],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "User/system that created the contact"
+        },
+        "updatedBy": {
+          "type": "string",
+          "description": "User/system that last updated the contact"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "email",
+            "import",
+            "api",
+            "sync",
+            "form",
+            "social"
+          ],
+          "description": "How the contact was added"
+        },
+        "sourceDetails": {
+          "type": "object",
+          "properties": {
+            "campaign": { "type": "string" },
+            "referrer": { "type": "string" },
+            "importBatch": { "type": "string" },
+            "formId": { "type": "string" },
+            "apiClient": { "type": "string" }
+          }
+        },
+        "lastContactedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastActivityAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "contactCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of interactions"
+        },
+        "emailsSent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "emailsReceived": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Contact quality/engagement score"
+        },
+        "lifecycleStage": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "prospect",
+            "customer",
+            "partner",
+            "alumni",
+            "inactive"
+          ]
+        },
+        "changeHistory": {
+          "type": "array",
+          "description": "Audit trail of changes",
+          "items": {
+            "type": "object",
+            "required": ["timestamp", "action", "user"],
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "action": {
+                "type": "string",
+                "enum": ["created", "updated", "merged", "imported", "exported"]
+              },
+              "user": {
+                "type": "string"
+              },
+              "changes": {
+                "type": "object",
+                "description": "Fields that changed"
+              },
+              "ipAddress": {
+                "type": "string",
+                "format": "ipv4"
+              }
+            }
+          }
+        }
+      }
+    },
+    "privacySettings": {
+      "type": "object",
+      "properties": {
+        "consentStatus": {
+          "type": "string",
+          "enum": ["granted", "denied", "pending", "expired"],
+          "default": "pending"
+        },
+        "consentDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "consentExpiryDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dataRetentionDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date when data should be deleted"
+        },
+        "doNotTrack": {
+          "type": "boolean",
+          "default": false
+        },
+        "doNotEmail": {
+          "type": "boolean",
+          "default": false
+        },
+        "doNotCall": {
+          "type": "boolean",
+          "default": false
+        },
+        "doNotText": {
+          "type": "boolean",
+          "default": false
+        },
+        "doNotMail": {
+          "type": "boolean",
+          "default": false
+        },
+        "doNotShare": {
+          "type": "boolean",
+          "default": false,
+          "description": "Do not share with third parties"
+        },
+        "rightToAccess": {
+          "type": "boolean",
+          "default": true
+        },
+        "rightToPortability": {
+          "type": "boolean",
+          "default": true
+        },
+        "rightToErasure": {
+          "type": "boolean",
+          "default": true
+        },
+        "rightToRectification": {
+          "type": "boolean",
+          "default": true
+        },
+        "dataProcessingAgreements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "agreementId": { "type": "string" },
+              "version": { "type": "string" },
+              "acceptedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    },
+    "dataQuality": {
+      "type": "object",
+      "properties": {
+        "completeness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage of fields filled"
+        },
+        "accuracy": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Data accuracy score"
+        },
+        "lastValidated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "validationErrors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "error": { "type": "string" },
+              "severity": {
+                "type": "string",
+                "enum": ["error", "warning", "info"]
+              }
+            }
+          }
+        },
+        "duplicateProbability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Likelihood this is a duplicate contact"
+        },
+        "possibleDuplicates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "contactId": { "type": "string" },
+              "similarity": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "matchedFields": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "contactGroup": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "type": {
+          "type": "string",
+          "enum": ["static", "dynamic", "smart"],
+          "default": "static"
+        },
+        "criteria": {
+          "type": "object",
+          "description": "Criteria for dynamic/smart groups",
+          "properties": {
+            "conditions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string" },
+                  "operator": {
+                    "type": "string",
+                    "enum": [
+                      "eq",
+                      "neq",
+                      "contains",
+                      "startsWith",
+                      "endsWith",
+                      "gt",
+                      "lt",
+                      "exists",
+                      "notExists"
+                    ]
+                  },
+                  "value": {}
+                }
+              }
+            },
+            "logic": {
+              "type": "string",
+              "enum": ["AND", "OR"],
+              "default": "AND"
+            }
+          }
+        },
+        "memberCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parentGroupId": {
+          "type": "string",
+          "description": "Parent group for hierarchical organization"
         },
         "metadata": {
           "type": "object",
-          "description": "Metadata",
           "properties": {
             "createdAt": {
               "type": "string",
@@ -160,18 +1087,99 @@
               "type": "string",
               "format": "date-time"
             },
-            "source": {
-              "type": "string",
-              "description": "How the contact was added",
-              "enum": ["manual", "email", "import", "api"]
-            },
-            "lastContactedAt": {
+            "createdBy": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["createdAt", "updatedAt"],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Database version number"
+        },
+        "totalContacts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalGroups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lastSync": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
               "type": "string",
               "format": "date-time"
+            },
+            "source": {
+              "type": "string"
+            },
+            "contactsAdded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "contactsUpdated": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "contactsDeleted": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "statistics": {
+          "type": "object",
+          "properties": {
+            "bySource": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "byCountry": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "withEmail": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "withPhone": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "withAddress": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "verified": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         }
       }
     }
-  }
+  },
+  "additionalProperties": false
 }

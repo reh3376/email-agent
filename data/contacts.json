@@ -1,1 +1,431 @@
-[]
+{
+  "version": "v1",
+  "schemaVersion": "1.0.0",
+  "contacts": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "externalIds": {
+        "outlook": "AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg==",
+        "gmail": "people/c1234567890"
+      },
+      "name": "John Smith",
+      "nameComponents": {
+        "prefix": "Mr.",
+        "firstName": "John",
+        "middleName": "Michael",
+        "lastName": "Smith",
+        "suffix": "Jr.",
+        "nickname": "Johnny"
+      },
+      "emails": [
+        {
+          "address": "john.smith@company.com",
+          "type": "work",
+          "primary": true,
+          "verified": true,
+          "verifiedAt": "2024-01-15T10:30:00Z"
+        },
+        {
+          "address": "johnsmith.personal@gmail.com",
+          "type": "personal",
+          "primary": false,
+          "verified": true,
+          "verifiedAt": "2024-01-20T14:45:00Z"
+        }
+      ],
+      "phones": [
+        {
+          "number": "+1 (502) 555-1234",
+          "type": "mobile",
+          "countryCode": "+1",
+          "primary": true,
+          "verified": true,
+          "verifiedAt": "2024-01-15T10:30:00Z",
+          "canReceiveSms": true,
+          "canReceiveVoice": true
+        },
+        {
+          "number": "+1 (502) 555-5678",
+          "type": "work",
+          "countryCode": "+1",
+          "extension": "123",
+          "primary": false,
+          "verified": true,
+          "canReceiveVoice": true
+        }
+      ],
+      "addresses": [
+        {
+          "type": "work",
+          "label": "Main Office",
+          "street": "123 Business Ave",
+          "street2": "Suite 456",
+          "city": "Louisville",
+          "state": "KY",
+          "postalCode": "40202",
+          "country": "United States",
+          "countryCode": "US",
+          "latitude": 38.2527,
+          "longitude": -85.7585,
+          "timezone": "America/Kentucky/Louisville",
+          "primary": true,
+          "verified": true
+        }
+      ],
+      "organization": {
+        "company": "WhiskeyHouse Distillery",
+        "department": "Operations",
+        "jobTitle": "Operations Manager",
+        "role": "Management",
+        "industry": "Beverage Manufacturing",
+        "employeeId": "WH-001234",
+        "startDate": "2020-03-15",
+        "isCurrent": true,
+        "website": "https://www.whiskeyhouse.com"
+      },
+      "personalInfo": {
+        "birthday": "1985-06-15",
+        "pronouns": "he/him",
+        "languages": [
+          {
+            "code": "en",
+            "name": "English",
+            "proficiency": "native"
+          },
+          {
+            "code": "es",
+            "name": "Spanish",
+            "proficiency": "conversational"
+          }
+        ],
+        "interests": ["bourbon", "craft spirits", "business development"]
+      },
+      "socialProfiles": {
+        "linkedin": "https://www.linkedin.com/in/johnsmith",
+        "twitter": "@johnsmith_wh"
+      },
+      "communicationPreferences": {
+        "preferredChannel": "email",
+        "preferredLanguage": "en",
+        "preferredTime": {
+          "timezone": "America/Kentucky/Louisville",
+          "days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
+          "startTime": "09:00",
+          "endTime": "17:00"
+        },
+        "emailFrequency": "immediate",
+        "marketingConsent": false
+      },
+      "relationships": [
+        {
+          "contactId": "550e8400-e29b-41d4-a716-446655440002",
+          "type": "colleague",
+          "notes": "Reports to Sarah Johnson"
+        }
+      ],
+      "tags": [
+        "whiskeyhouse",
+        "management",
+        "operations",
+        "trusted",
+        "internal"
+      ],
+      "groups": ["all-staff", "management-team", "operations-dept"],
+      "notes": "Key contact for operations. Handles production scheduling and supplier relations. Prefers email communication for business matters.",
+      "customFields": {
+        "customerNumber": "CUS-001234",
+        "region": "North America",
+        "accountType": "Internal",
+        "lastOrderDate": "2024-11-15"
+      },
+      "metadata": {
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-12-01T14:45:00Z",
+        "createdBy": "system",
+        "updatedBy": "user",
+        "source": "email",
+        "sourceDetails": {
+          "importBatch": "initial-import-2024"
+        },
+        "lastContactedAt": "2024-11-28T09:15:00Z",
+        "lastActivityAt": "2024-11-28T09:15:00Z",
+        "contactCount": 245,
+        "emailsSent": 123,
+        "emailsReceived": 122,
+        "score": 95,
+        "lifecycleStage": "customer"
+      },
+      "privacy": {
+        "consentStatus": "granted",
+        "consentDate": "2024-01-15T10:30:00Z",
+        "doNotEmail": false,
+        "doNotCall": false,
+        "doNotText": false,
+        "rightToAccess": true,
+        "rightToPortability": true,
+        "rightToErasure": true,
+        "rightToRectification": true
+      },
+      "quality": {
+        "completeness": 92,
+        "accuracy": 98,
+        "lastValidated": "2024-11-01T00:00:00Z",
+        "validationErrors": [],
+        "duplicateProbability": 5
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Sarah Johnson",
+      "nameComponents": {
+        "prefix": "Ms.",
+        "firstName": "Sarah",
+        "lastName": "Johnson",
+        "phonetic": {
+          "firstName": "SAIR-uh",
+          "lastName": "JAHN-sun"
+        }
+      },
+      "emails": [
+        {
+          "address": "sarah.johnson@company.com",
+          "type": "work",
+          "primary": true,
+          "verified": true,
+          "verifiedAt": "2024-01-10T08:00:00Z"
+        }
+      ],
+      "phones": [
+        {
+          "number": "+1 (502) 555-2345",
+          "type": "mobile",
+          "countryCode": "+1",
+          "primary": true,
+          "verified": true,
+          "canReceiveSms": true,
+          "canReceiveVoice": true
+        }
+      ],
+      "organization": {
+        "company": "WhiskeyHouse Distillery",
+        "department": "Executive",
+        "jobTitle": "Chief Operating Officer",
+        "role": "Executive",
+        "industry": "Beverage Manufacturing",
+        "startDate": "2018-01-10",
+        "isCurrent": true
+      },
+      "tags": ["whiskeyhouse", "executive", "vip", "decision-maker"],
+      "groups": ["executive-team", "all-staff"],
+      "metadata": {
+        "createdAt": "2024-01-10T08:00:00Z",
+        "updatedAt": "2024-12-01T10:00:00Z",
+        "createdBy": "system",
+        "source": "manual",
+        "score": 100,
+        "lifecycleStage": "partner"
+      },
+      "privacy": {
+        "consentStatus": "granted",
+        "consentDate": "2024-01-10T08:00:00Z",
+        "doNotEmail": false,
+        "doNotCall": false,
+        "doNotText": false
+      },
+      "quality": {
+        "completeness": 85,
+        "accuracy": 100,
+        "lastValidated": "2024-11-01T00:00:00Z"
+      }
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Premium Spirits Vendor",
+      "nameComponents": {
+        "firstName": "Michael",
+        "lastName": "Chen"
+      },
+      "emails": [
+        {
+          "address": "mchen@premiumspirits.com",
+          "type": "work",
+          "primary": true,
+          "verified": true,
+          "verifiedAt": "2024-02-20T11:00:00Z"
+        }
+      ],
+      "phones": [
+        {
+          "number": "+1 (415) 555-7890",
+          "type": "work",
+          "countryCode": "+1",
+          "primary": true,
+          "verified": false
+        }
+      ],
+      "organization": {
+        "company": "Premium Spirits Supply Co.",
+        "jobTitle": "Account Manager",
+        "role": "Sales",
+        "industry": "Wholesale Trade",
+        "website": "https://www.premiumspirits.com"
+      },
+      "tags": ["vendor", "supplier", "spirits", "external"],
+      "groups": ["vendors", "approved-suppliers"],
+      "notes": "Primary contact for specialty grain and barrel supplies. Negotiated 2024 contract terms.",
+      "customFields": {
+        "vendorId": "VEN-00456",
+        "contractExpiry": "2024-12-31",
+        "paymentTerms": "Net 30",
+        "preferredCurrency": "USD"
+      },
+      "metadata": {
+        "createdAt": "2024-02-20T11:00:00Z",
+        "updatedAt": "2024-11-15T16:30:00Z",
+        "createdBy": "user",
+        "source": "manual",
+        "lastContactedAt": "2024-11-15T16:30:00Z",
+        "contactCount": 67,
+        "emailsSent": 34,
+        "emailsReceived": 33,
+        "score": 88,
+        "lifecycleStage": "customer"
+      },
+      "privacy": {
+        "consentStatus": "granted",
+        "consentDate": "2024-02-20T11:00:00Z",
+        "doNotEmail": false,
+        "doNotCall": false,
+        "marketingConsent": true,
+        "marketingConsentDate": "2024-02-20T11:00:00Z"
+      },
+      "quality": {
+        "completeness": 78,
+        "accuracy": 95,
+        "lastValidated": "2024-11-01T00:00:00Z"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "id": "all-staff",
+      "name": "All Staff",
+      "description": "All company employees",
+      "type": "static",
+      "memberCount": 2,
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "management-team",
+      "name": "Management Team",
+      "description": "Company management personnel",
+      "type": "static",
+      "memberCount": 1,
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "executive-team",
+      "name": "Executive Team",
+      "description": "C-level executives",
+      "type": "static",
+      "memberCount": 1,
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "vendors",
+      "name": "Vendors",
+      "description": "External vendors and suppliers",
+      "type": "static",
+      "memberCount": 1,
+      "metadata": {
+        "createdAt": "2024-01-01T00:00:00Z",
+        "createdBy": "system"
+      }
+    },
+    {
+      "id": "vip-contacts",
+      "name": "VIP Contacts",
+      "description": "High-priority contacts requiring special attention",
+      "type": "smart",
+      "criteria": {
+        "conditions": [
+          {
+            "field": "tags",
+            "operator": "contains",
+            "value": "vip"
+          },
+          {
+            "field": "metadata.score",
+            "operator": "gt",
+            "value": 90
+          }
+        ],
+        "logic": "OR"
+      },
+      "memberCount": 2,
+      "metadata": {
+        "createdAt": "2024-01-15T00:00:00Z",
+        "createdBy": "admin",
+        "updatedAt": "2024-12-01T00:00:00Z"
+      }
+    }
+  ],
+  "metadata": {
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-12-01T16:45:00Z",
+    "version": 3,
+    "totalContacts": 3,
+    "totalGroups": 5,
+    "lastSync": {
+      "timestamp": "2024-12-01T00:00:00Z",
+      "source": "manual",
+      "contactsAdded": 0,
+      "contactsUpdated": 3,
+      "contactsDeleted": 0
+    },
+    "statistics": {
+      "bySource": {
+        "email": 1,
+        "manual": 2
+      },
+      "byCountry": {
+        "US": 3
+      },
+      "withEmail": 3,
+      "withPhone": 3,
+      "withAddress": 1,
+      "verified": 3
+    }
+  },
+  "settings": {
+    "duplicateHandling": "merge",
+    "defaultCountry": "US",
+    "defaultTimezone": "America/Kentucky/Louisville",
+    "privacyDefaults": {
+      "consentStatus": "pending",
+      "doNotEmail": false,
+      "doNotCall": false,
+      "doNotText": false,
+      "rightToAccess": true,
+      "rightToPortability": true,
+      "rightToErasure": true,
+      "rightToRectification": true
+    },
+    "validationRules": {
+      "requireEmail": true,
+      "requirePhone": false,
+      "validateEmails": true,
+      "validatePhones": true,
+      "allowInternationalPhones": true
+    }
+  }
+}
