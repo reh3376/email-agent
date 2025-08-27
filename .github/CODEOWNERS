@@ -1,0 +1,14 @@
+# Code Owners for Email Agent Repository
+# This ensures @reh3376 is automatically requested as a reviewer for all PRs
+
+# Global owner for all files
+* @reh3376
+
+# Specific ownership for critical files
+/.github/ @reh3376
+/src/ @reh3376
+/docs/ @reh3376
+/schemas/ @reh3376
+/data/ @reh3376
+pyproject.toml @reh3376
+README.md @reh3376

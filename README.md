@@ -5,6 +5,19 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 🤝 Collaboration
+
+This repository follows a structured collaboration workflow with branch protection
+rules. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
+
+**Key Points:**
+- All changes require PR approval from @reh3376
+- Developers work in `dev/<username>/<feature>` branches
+- All CI checks must pass before merging
+- Main branch is protected from direct pushes
+
+---
+
 A privacy-focused, offline-first desktop email assistant that runs locally and
 provides intelligent email processing through a FastAPI-based service.
 The assistant classifies emails, applies rule-based actions, manages contacts,
