@@ -1,0 +1,416 @@
+{
+  "rules": [
+    {
+      "id": "base-mark-read",
+      "description": "All messages are marked read after classification per spec.",
+      "priority": 1000,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.message.id",
+              "op": "exists"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "mark_read"
+        }
+      ]
+    },
+    {
+      "id": "sender-add-contact",
+      "description": "If sender is friend/WHK/professional/colleague/co-worker/contact then add to contacts.",
+      "priority": 900,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category2_sender_identity",
+              "op": "in",
+              "value": [
+                "friend",
+                "co-worker",
+                "professional",
+                "colleague",
+                "contact"
+              ]
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "add_contact" # <note build the contact object out so it can accomodate the standard contacts data /note>
+        }
+      ]
+    },
+    {
+      "id": "sender-malicious",
+      "description": "Malicious senders are deleted and reported as junk.",
+      "priority": 900,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category2_sender_identity",
+              "op": "eq",
+              "value": "malicious"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "report_junk"
+        },
+        {
+          "type": "delete"
+        },
+        {
+          "type": "set_save_to_folder",
+          "params": {
+            "value": false
+          }
+        },
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "no action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sender-other-delete",
+      "description": "If sender identity is other AND type is other, delete.",
+      "priority": 800,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category2_sender_identity",
+              "op": "eq",
+              "value": "other"
+            },
+            {
+              "path": "$.classification.category1_type",
+              "op": "eq",
+              "value": "other"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "delete"
+        },
+        {
+          "type": "set_save_to_folder",
+          "params": {
+            "value": false
+          }
+        },
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "no action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "meeting-detect-set-handler",
+      "description": "Requests for meeting require user action; set handler and compute conflict flag externally.",
+      "priority": 700,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "request for meeting"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "user action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "meeting-no-conflict-contact",
+      "description": "If no conflict and sender is in contacts, default to save_to_folder=true (user will choose accept/tentative/decline via digest).",
+      "priority": 690,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "request for meeting"
+            },
+            {
+              "path": "$.calendar.conflict",
+              "op": "eq",
+              "value": false
+            },
+            {
+              "path": "$.contacts.sender_in_contacts",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "set_save_to_folder",
+          "params": {
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "meeting-conflict-alert",
+      "description": "If meeting conflicts, set conflict alert flag for digest.",
+      "priority": 690,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "request for meeting"
+            },
+            {
+              "path": "$.calendar.conflict",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "set_flag",
+          "params": {
+            "key": "meeting_conflict_alert",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "rfi-set-handler",
+      "description": "Requests for information require user attention.",
+      "priority": 680,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "request for information"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "user action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "notification-travel-appointment-deadline-autocreate",
+      "description": "If notification type is travel/appointment/deadline and no conflict, auto-add to primary calendar.",
+      "priority": 670,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "notification"
+            },
+            {
+              "path": "$.notification.subtype",
+              "op": "in",
+              "value": [
+                "travel",
+                "appointment",
+                "deadline"
+              ]
+            },
+            {
+              "path": "$.calendar.conflict",
+              "op": "eq",
+              "value": false
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "calendar_create",
+          "params": {
+            "calendar": "primary"
+          }
+        },
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "no action required"
+          }
+        },
+        {
+          "type": "set_save_to_folder",
+          "params": {
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "notification-conflict-alert",
+      "description": "If a qualifying notification conflicts, flag for digest.",
+      "priority": 660,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "notification"
+            },
+            {
+              "path": "$.notification.subtype",
+              "op": "in",
+              "value": [
+                "travel",
+                "appointment",
+                "deadline"
+              ]
+            },
+            {
+              "path": "$.calendar.conflict",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "set_flag",
+          "params": {
+            "key": "notification_conflict_alert",
+            "value": true
+          }
+        },
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "user action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "promotional-default",
+      "description": "Promotional messages: no auto-action; allow user to delete or save via digest.",
+      "priority": 650,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "promotional"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "no action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "junk-delete-or-report",
+      "description": "Junk messages default to delete; report as junk if provider supports.",
+      "priority": 640,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.classification.category3_context",
+              "op": "eq",
+              "value": "junk"
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "report_junk"
+        },
+        {
+          "type": "delete"
+        },
+        {
+          "type": "set_save_to_folder",
+          "params": {
+            "value": false
+          }
+        },
+        {
+          "type": "set_handler",
+          "params": {
+            "value": "no action required"
+          }
+        }
+      ]
+    },
+    {
+      "id": "foldering-when-save",
+      "description": "When save_to_folder=true, engine will compute path conversations/<domain>/<localpart>.",
+      "priority": 200,
+      "when": [
+        {
+          "allOf": [
+            {
+              "path": "$.engine.save_to_folder",
+              "op": "eq",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "then": [
+        {
+          "type": "move_folder",
+          "params": {
+            "path": "conversations/${from_domain}/${from_localpart}"
+          }
+        }
+      ]
+    }
+  ]
+}

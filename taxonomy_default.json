@@ -1,0 +1,64 @@
+{
+  "categories": [  # <note add versioning to this object and type, type = email categories /note>
+    {
+      "id": 0,
+      "name": "reviewed",
+      "required": true,
+      "labels": [
+        "reviewed"
+      ]
+    },
+    {
+      "id": 1,    # <note add
+      "name": "type",
+      "required": true,
+      "labels": [
+        "work/WhiskeyHouse",
+        "work/other",
+        "personal",
+        "professional",
+        "other"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "sender identity",
+      "required": true,
+      "labels": [
+        "friend",
+        "contact",
+        "co-worker",
+        "vendor",
+        "marketer",
+        "colleague",
+        "organization",
+        "enterprise",
+        "malicious",
+        "other"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "context",
+      "required": true,
+      "labels": [
+        "request for meeting",
+        "request for information",
+        "promotional",
+        "unsolicited",
+        "notification",
+        "junk",
+        "other"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "handler",
+      "required": true,
+      "labels": [
+        "user action required",
+        "no action required"
+      ]
+    }
+  ]
+}
