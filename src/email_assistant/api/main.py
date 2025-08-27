@@ -3,10 +3,9 @@ from __future__ import annotations
 import datetime
 import os
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Path, Query, Response
-from fastapi.responses import FileResponse, JSONResponse
 
 from ..attachment_manager import AttachmentManager, AttachmentStats
 from ..config import ensure_dirs, load_config
@@ -26,7 +25,6 @@ from .models import (
     GraphIngestRequest,
     GraphIngestResponse,
     GraphQueryResponse,
-    Rule,
     Ruleset,
     SchedulePreview,
     Taxonomy,
@@ -54,8 +52,8 @@ decisions_store = NdjsonStore(CFG["stores"]["decisions"])
 MODEL_PATH = "src/email_assistant/models/classifier.pt"
 
 # Version stores for taxonomy and rules
-taxonomy_versions: Dict[str, Taxonomy] = {}
-rules_versions: Dict[str, Ruleset] = {}
+taxonomy_versions: dict[str, Taxonomy] = {}
+rules_versions: dict[str, Ruleset] = {}
 
 # Scheduler instance
 scheduler = EmailScheduler()
@@ -63,7 +61,7 @@ scheduler = EmailScheduler()
 # Attachment manager instance
 attachment_manager = AttachmentManager(
     base_path=CFG.get("attachments", {}).get("basePath", "./data/attachments"),
-    retention_days=CFG.get("attachments", {}).get("retentionDays", 90)
+    retention_days=CFG.get("attachments", {}).get("retentionDays", 90),
 )
 
 
@@ -91,7 +89,7 @@ def _convert_legacy_ruleset(data: dict) -> dict:
     """Convert legacy ruleset format to current format."""
     if "rules" not in data:
         return data
-    
+
     data["rules"] = [_convert_single_rule(rule) for rule in data["rules"]]
     return data
 
@@ -105,7 +103,7 @@ def _convert_single_rule(rule: dict) -> dict:
         "priority": rule.get("priority", 100),
         "enabled": True,
         "conditions": _extract_conditions(rule),
-        "actions": _extract_actions(rule)
+        "actions": _extract_actions(rule),
     }
 
 
@@ -114,11 +112,11 @@ def _extract_conditions(rule: dict) -> list:
     conditions = []
     if "when" not in rule:
         return conditions
-    
+
     for when_group in rule["when"]:
         if "allOf" in when_group:
             conditions.extend(_convert_all_of_conditions(when_group["allOf"]))
-    
+
     return conditions
 
 
@@ -129,7 +127,7 @@ def _convert_all_of_conditions(all_of_conditions: list) -> list:
             "field": cond.get("path", "").replace("$.", ""),
             "operator": cond.get("op", "exists"),
             "value": cond.get("value", True),
-            "logic": "AND"
+            "logic": "AND",
         }
         for cond in all_of_conditions
     ]
@@ -139,11 +137,11 @@ def _extract_actions(rule: dict) -> list:
     """Extract actions from legacy rule format."""
     if "then" not in rule:
         return []
-    
+
     return [
         {
             "type": action.get("type", "unknown"),
-            "parameters": {k: v for k, v in action.items() if k != "type"}
+            "parameters": {k: v for k, v in action.items() if k != "type"},
         }
         for action in rule["then"]
     ]
@@ -155,13 +153,13 @@ def get_rules():
     data = rules_store.read()
     if not data:
         raise HTTPException(status_code=404, detail="Ruleset not found")
-    
+
     # Convert legacy format if needed
     if data.get("rules") and len(data["rules"]) > 0:
         first_rule = data["rules"][0]
         if "when" in first_rule or "then" in first_rule:
             data = _convert_legacy_ruleset(data)
-    
+
     return Ruleset(**data)
 
 
@@ -176,9 +174,9 @@ def put_rules(ruleset: Ruleset):
     return ruleset
 
 
-@app.get("/decisions", response_model=List[Decision])
+@app.get("/decisions", response_model=list[Decision])
 def list_decisions(
-    date: Optional[str] = Query(None, description="Filter by date (YYYY-MM-DD)"),
+    date: str | None = Query(None, description="Filter by date (YYYY-MM-DD)"),
     limit: int = Query(100, ge=1, le=10000),
 ):
     """List email decisions."""
@@ -192,18 +190,18 @@ def record_decision(decision: Decision):
     # Generate ID if not provided
     if not decision.id:
         decision.id = str(uuid.uuid4())
-    
+
     # Add timestamp if not provided
     if not decision.timestamp:
         decision.timestamp = datetime.datetime.now()
-    
+
     try:
         # Convert to dict with JSON-compatible datetime
-        data = decision.model_dump(mode='json')
+        data = decision.model_dump(mode="json")
         decisions_store.append(data)
         return decision
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to record decision: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to record decision: {str(e)}") from e
 
 
 @app.get("/decisions/{id}", response_model=Decision)
@@ -217,11 +215,11 @@ def get_decision_by_id(id: str = Path(..., description="Decision ID")):
     raise HTTPException(status_code=404, detail="Decision not found")
 
 
-@app.get("/taxonomy/versions", response_model=List[VersionInfo])
+@app.get("/taxonomy/versions", response_model=list[VersionInfo])
 def get_taxonomy_versions():
     """List taxonomy versions."""
     versions = []
-    for key, taxonomy in taxonomy_versions.items():
+    for key, _taxonomy in taxonomy_versions.items():
         version, created = key.split("_", 1)
         versions.append(
             VersionInfo(
@@ -238,7 +236,7 @@ def create_taxonomy_version(taxonomy: Taxonomy):
     """Create new taxonomy version."""
     version_key = f"{taxonomy.version}_{datetime.datetime.now().isoformat()}"
     taxonomy_versions[version_key] = taxonomy
-    
+
     return VersionInfo(
         version=taxonomy.version,
         createdAt=datetime.datetime.now(),
@@ -246,11 +244,11 @@ def create_taxonomy_version(taxonomy: Taxonomy):
     )
 
 
-@app.get("/rules/versions", response_model=List[VersionInfo])
+@app.get("/rules/versions", response_model=list[VersionInfo])
 def get_rules_versions():
     """List ruleset versions."""
     versions = []
-    for key, ruleset in rules_versions.items():
+    for key, _ruleset in rules_versions.items():
         version, created = key.split("_", 1)
         versions.append(
             VersionInfo(
@@ -267,7 +265,7 @@ def create_rules_version(ruleset: Ruleset):
     """Create new ruleset version."""
     version_key = f"{ruleset.version}_{datetime.datetime.now().isoformat()}"
     rules_versions[version_key] = ruleset
-    
+
     return VersionInfo(
         version=ruleset.version,
         createdAt=datetime.datetime.now(),
@@ -285,7 +283,7 @@ def get_scheduler_preview(
         next_runs = scheduler.get_next_runs(schedule, count)
         return SchedulePreview(schedule=schedule, nextRuns=next_runs)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/learn/feedback", response_model=FeedbackResponse)
@@ -293,32 +291,29 @@ def post_feedback(feedback: FeedbackBatch):
     """Submit learning feedback."""
     processed_count = 0
     graph_updates = 0
-    
+
     for item in feedback.items:
         result = _process_feedback_item(item)
         processed_count += result["processed"]
         graph_updates += result["graph_updates"]
-    
-    return FeedbackResponse(
-        accepted=processed_count,
-        graphUpserts=graph_updates
-    )
+
+    return FeedbackResponse(accepted=processed_count, graphUpserts=graph_updates)
 
 
 def _process_feedback_item(item) -> dict:
     """Process a single feedback item."""
     result = {"processed": 0, "graph_updates": 0}
-    
+
     try:
         if item.decisionId and _update_decision_feedback(item):
             result["processed"] = 1
-        
+
         if item.correctedClassification:
             result["graph_updates"] = 1
-            
+
     except Exception as e:
         print(f"Error processing feedback item: {e}")
-    
+
     return result
 
 
@@ -348,9 +343,11 @@ def _update_decision_for_date(item, date) -> bool:
 def _apply_feedback_to_decision(decision: dict, item) -> None:
     """Apply feedback to a decision object."""
     decision["feedback"] = {
-        "correctedClassification": item.correctedClassification.model_dump() if item.correctedClassification else None,
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "notes": item.notes
+        "correctedClassification": item.correctedClassification.model_dump()
+        if item.correctedClassification
+        else None,
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "notes": item.notes,
     }
 
 
@@ -363,7 +360,7 @@ def graph_query(
     """Query graph database."""
     # For now, return mock data as Oxigraph integration is pending
     # In production, this would execute the query against Oxigraph
-    
+
     if lang == "sparql":
         # Example SPARQL query response structure
         return GraphQueryResponse(
@@ -372,8 +369,8 @@ def graph_query(
                 ["email:123", "classification:type", "work"],
                 ["email:123", "classification:sender", "colleague"],
                 ["email:456", "classification:type", "personal"],
-                ["email:456", "classification:sender", "friend"]
-            ][:limit]
+                ["email:456", "classification:sender", "friend"],
+            ][:limit],
         )
     else:
         # Example Cypher query response structure
@@ -383,8 +380,8 @@ def graph_query(
                 ["Email", "CLASSIFIED_AS", "work"],
                 ["Email", "SENT_BY", "colleague"],
                 ["Email", "HAS_ATTACHMENT", "true"],
-                ["Email", "PRIORITY", "high"]
-            ][:limit]
+                ["Email", "PRIORITY", "high"],
+            ][:limit],
         )
 
 
@@ -393,32 +390,32 @@ def graph_ingest(request: GraphIngestRequest):
     """Ingest data into graph."""
     errors = []
     processed_triples = 0
-    
+
     # Validate and process triples
     triples = request.batch.get("triples", [])
-    
+
     for triple in triples:
         try:
             # Validate triple structure
-            if not isinstance(triple, (list, tuple)) or len(triple) != 3:
+            if not isinstance(triple, list | tuple) or len(triple) != 3:
                 errors.append(f"Invalid triple format: {triple}")
                 continue
-            
+
             subject, predicate, obj = triple
-            
+
             # Here we would normally insert into Oxigraph
             # For now, we just validate the data
             if all(isinstance(x, str) for x in [subject, predicate, obj]):
                 processed_triples += 1
             else:
                 errors.append(f"Triple components must be strings: {triple}")
-                
+
         except Exception as e:
             errors.append(f"Error processing triple: {str(e)}")
-    
+
     return GraphIngestResponse(
         tripleCount=processed_triples,
-        errors=errors[:10]  # Limit error messages
+        errors=errors[:10],  # Limit error messages
     )
 
 
@@ -427,18 +424,17 @@ def classify(request: ClassificationRequest):
     """Classify email using ML model."""
     if not os.path.exists(MODEL_PATH):
         raise HTTPException(
-            status_code=400, 
-            detail="Model not trained. Run scripts/train_classifier.py"
+            status_code=400, detail="Model not trained. Run scripts/train_classifier.py"
         )
-    
+
     # Load model and classify
     hv, model, label_spaces = load_model(MODEL_PATH)
     text = f"{request.subject} {request.body}"
     classification_dict = predict_local(hv, model, label_spaces, [text])[0]
-    
+
     # Create classification object
     classification = Classification(**classification_dict)
-    
+
     # Create features object
     features = EmailFeatures(
         subject=request.subject,
@@ -446,16 +442,16 @@ def classify(request: ClassificationRequest):
         from_=request.from_,
         to=request.to,
     )
-    
+
     # Apply rules engine
     rules_matched = []
     actions_list = []
-    
+
     # Load current ruleset and create engine
     ruleset_data = rules_store.read()
     if ruleset_data and "rules" in ruleset_data:
         engine = create_rules_engine(ruleset_data["rules"])
-        
+
         # Prepare email data for rules evaluation
         email_data = {
             "subject": request.subject,
@@ -463,17 +459,17 @@ def classify(request: ClassificationRequest):
             "from": request.from_,
             "to": request.to or [],
             "hasAttachments": False,
-            "attachmentCount": 0
+            "attachmentCount": 0,
         }
-        
+
         # Evaluate rules
         matches = engine.evaluate(email_data, classification)
-        
+
         # Extract matched rule names and actions
         for match in matches:
             rules_matched.append(match.rule_name)
             actions_list.extend(match.actions)
-    
+
     return ClassificationResponse(
         messageId=request.messageId or str(uuid.uuid4()),
         timestamp=datetime.datetime.now(),
@@ -490,7 +486,7 @@ def get_attachment_stats():
     return attachment_manager.get_stats()
 
 
-@app.get("/attachments/{messageId}", response_model=List[Dict[str, Any]])
+@app.get("/attachments/{messageId}", response_model=list[dict[str, Any]])
 def list_attachments(message_id: str = Path(..., alias="messageId", description=MESSAGE_ID_DESC)):
     """List all attachments for an email."""
     return attachment_manager.list_attachments(message_id)
@@ -499,13 +495,13 @@ def list_attachments(message_id: str = Path(..., alias="messageId", description=
 @app.get("/attachments/{messageId}/{filename}")
 def get_attachment(
     message_id: str = Path(..., alias="messageId", description=MESSAGE_ID_DESC),
-    filename: str = Path(..., description=ATTACHMENT_FILENAME_DESC)
+    filename: str = Path(..., description=ATTACHMENT_FILENAME_DESC),
 ):
     """Download a specific attachment."""
     content = attachment_manager.get_attachment(message_id, filename)
     if content is None:
         raise HTTPException(status_code=404, detail="Attachment not found")
-    
+
     # Guess content type from filename
     content_type = "application/octet-stream"
     if filename.lower().endswith(".pdf"):
@@ -514,22 +510,22 @@ def get_attachment(
         content_type = "image/jpeg"
     elif filename.lower().endswith(".png"):
         content_type = "image/png"
-    
+
     return Response(
         content=content,
         media_type=content_type,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
 @app.delete("/attachments/{messageId}/{filename}")
 def delete_attachment(
     message_id: str = Path(..., alias="messageId", description=MESSAGE_ID_DESC),
-    filename: str = Path(..., description=ATTACHMENT_FILENAME_DESC)
+    filename: str = Path(..., description=ATTACHMENT_FILENAME_DESC),
 ):
     """Remove an attachment."""
     deleted = attachment_manager.delete_attachment(message_id, filename)
     if not deleted:
         raise HTTPException(status_code=404, detail="Attachment not found")
-    
+
     return {"status": "deleted", "messageId": message_id, "filename": filename}
