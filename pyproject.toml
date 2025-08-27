@@ -254,10 +254,6 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 
-[tool.coverage.run]
-source = ["src/email_assistant"]
-branch = true
-
 [tool.coverage.report]
 exclude_lines = [
   "pragma: no cover",
