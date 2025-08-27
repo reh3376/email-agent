@@ -148,7 +148,7 @@ extend-exclude = [
   "**/documentation/",
   
   # Archive and build artifacts
-  "archieve/",
+  "archive/",
   "dist/",
   "build/",
   "*.egg-info/",

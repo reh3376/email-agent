@@ -36,7 +36,6 @@ doc/
 **/doc/
 
 # Archive and backup files
-archieve/
 archive/
 
 # Build and distribution

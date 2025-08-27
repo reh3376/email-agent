@@ -2,9 +2,9 @@
 
 ## Issue Identified
 
-The GET /taxonomy endpoint in the API documentation at http://127.0.0.1:8765/docs was showing auto-generated example data that didn't match our schema governance requirements:
+The GET /taxonomy endpoint in the API documentation at <http://127.0.0.1:8765/docs> was showing auto-generated example data that didn't match our schema governance requirements:
 
-### Problems Found:
+### Problems Found
 
 1. **Invalid version format**: Was showing a very long number instead of the required pattern `v\d+` (e.g., v1, v2)
 2. **Invalid category IDs**: All categories were showing `id: 4` instead of IDs 0-4
@@ -17,25 +17,25 @@ The GET /taxonomy endpoint in the API documentation at http://127.0.0.1:8765/doc
 
 Updated the following models in `src/email_assistant/api/models.py`:
 
-#### Category Model:
+#### Category Model
 
 - Added Field descriptions and constraints
 - Added examples for each field (id: 0, name: "reviewed", labels: ["yes", "no"])
 - Added model_config with complete examples
 
-#### Taxonomy Model:
+#### Taxonomy Model
 
 - Added Field descriptions for all properties
 - Set proper pattern constraint for version field
 - Added complete example showing all 5 categories with proper structure
 - Added metadata example with createdAt, updatedAt, and author fields
 
-#### Classification Model:
+#### Classification Model
 
 - Added field-level examples
 - Added model_config with complete classification example
 
-#### EmailFeatures Model:
+#### EmailFeatures Model
 
 - Added realistic examples for email fields
 
@@ -52,7 +52,7 @@ The OpenAPI documentation now shows:
 
 You can verify the fixes by:
 
-1. Visiting http://127.0.0.1:8765/docs
+1. Visiting <http://127.0.0.1:8765/docs>
 2. Expanding the GET /taxonomy endpoint
 3. Clicking "Try it out" and "Execute"
 4. The example response now matches our schema requirements
