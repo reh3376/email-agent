@@ -56,7 +56,15 @@
             {
               "field": "$.classification.senderIdentity",
               "operator": "in",
-              "value": ["friend", "family", "co-worker", "colleague", "contact", "client", "partner"],
+              "value": [
+                "friend",
+                "family",
+                "co-worker",
+                "colleague",
+                "contact",
+                "client",
+                "partner"
+              ],
               "caseInsensitive": true
             },
             {
@@ -393,7 +401,11 @@
             {
               "field": "$.classification.context",
               "operator": "in",
-              "value": ["request/information", "request/action", "request/feedback"],
+              "value": [
+                "request/information",
+                "request/action",
+                "request/feedback"
+              ],
               "caseInsensitive": true
             },
             {
@@ -1072,7 +1084,11 @@
     }
   ],
   "variables": {
-    "VIP_EMAILS": ["ceo@company.com", "cto@company.com", "important@client.com"],
+    "VIP_EMAILS": [
+      "ceo@company.com",
+      "cto@company.com",
+      "important@client.com"
+    ],
     "WHITELISTED_MARKETERS": ["newsletter@trustedsource.com"],
     "MAX_ATTACHMENT_SIZE": 26214400,
     "RETENTION_DAYS": 90,
