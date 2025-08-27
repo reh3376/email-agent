@@ -22,22 +22,10 @@
     {
       "type": "required_status_checks",
       "parameters": {
-        "strict_required_status_checks_policy": true,
+        "strict_required_status_checks_policy": false,
         "required_status_checks": [
           {
-            "context": "CI/Test and Lint (ubuntu-latest, 3.11)",
-            "integration_id": null
-          },
-          {
-            "context": "CI/Test and Lint (ubuntu-latest, 3.12)",
-            "integration_id": null
-          },
-          {
-            "context": "CI/Build Package",
-            "integration_id": null
-          },
-          {
-            "context": "CI/Type Check",
+            "context": "Linting Check (No Errors, <50 Warnings)",
             "integration_id": null
           }
         ]

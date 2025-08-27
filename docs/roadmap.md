@@ -2,6 +2,49 @@
 
 _Last updated: 2025-08-27_
 
+## 👥 Developer Onboarding
+
+Welcome to the Email Agent project! Before diving into the functional spec, here's what you need to know:
+
+### Getting Started
+
+1. **Clone the repo** into your local environment
+2. **Read [CONTRIBUTING.md](./CONTRIBUTING.md)** for collaboration workflow
+3. **Set up your development branch**: `dev/<your-username>/<feature>`
+4. **Install dependencies**:
+
+   ```bash
+   uv venv && source .venv/bin/activate
+   uv pip install -e ".[dev]"
+   ```
+
+5. **Run the API locally**: `uv run python scripts/run_api.py`
+
+### Key Development Principles
+
+- **Modular Python Architecture**: Keep components isolated and testable
+- **Full Stack Python**: FastAPI backend, future desktop UI (likely Electron/Tauri with Python bridge)
+- **Commit Messages**: Must be descriptive (>15 words) explaining the "why"
+- **Small PRs**: Frequent, focused pull requests are preferred
+- **Linting**: Zero errors allowed, <50 warnings total
+
+### Code Quality Standards
+
+- All code must pass `ruff check` with no errors
+- Type hints required for all function signatures
+- Docstrings for all public functions/classes
+- Tests for new functionality (pytest)
+
+### Architecture Overview
+
+- **API-First Design**: Everything goes through the FastAPI layer
+- **JSON Storage**: Schema-validated JSON for configuration
+- **NDJSON Logs**: Append-only decision logs for audit trail
+- **Local ML**: PyTorch classifier augmented by LLM
+- **Graph DB**: Oxigraph for relationship tracking
+
+---
+
 A stand‑alone desktop app (Windows/macOS/Linux) that runs locally.
 App polls configured email accounts on a schedule, classifies + summarizes mail,
 performs rule-based actions, and sends a single digest email with one‑click

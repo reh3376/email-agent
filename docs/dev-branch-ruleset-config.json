@@ -5,12 +5,12 @@
   "conditions": {
     "ref_name": {
       "include": ["refs/heads/**"],
-      "exclude": ["refs/heads/main", "refs/heads/dev/**"]
+      "exclude": ["refs/heads/main", "refs/heads/dev/*/**"]
     }
   },
   "rules": [
     {
-      "type": "creation",
+      "type": "deletion",
       "parameters": {}
     }
   ],

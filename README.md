@@ -11,10 +11,41 @@ This repository follows a structured collaboration workflow with branch protecti
 rules. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 
 **Key Points:**
+
 - All changes require PR approval from @reh3376
 - Developers work in `dev/<username>/<feature>` branches
 - All CI checks must pass before merging
 - Main branch is protected from direct pushes
+
+### 📌 Branch Naming Requirements
+
+**IMPORTANT**: Branch names must follow this exact pattern or they will be blocked:
+
+```
+dev/<your-github-username>/<feature-description>
+```
+
+✅ **Good Examples:**
+
+- `dev/johndoe/add-email-filter`
+- `dev/janesmith/fix-classification-bug`
+- `dev/bobchen/update-api-docs`
+
+❌ **Bad Examples (will be BLOCKED):**
+
+- `feature/new-thing` - Missing dev prefix and username
+- `dev/add-filter` - Missing username
+- `johndoe/feature` - Missing dev prefix
+- `dev/john doe/feature` - No spaces allowed
+- `DEV/JOHNDOE/FEATURE` - Must be lowercase
+
+**Simple Rules:**
+
+1. Start with `dev/`
+2. Add your GitHub username
+3. Add a `/`
+4. Add a short description (no spaces, use hyphens)
+5. Keep everything lowercase
 
 ---
 
