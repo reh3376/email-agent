@@ -92,7 +92,13 @@
           "type": "string"
         }
       },
-      "required": ["category0_reviewed", "category1_type", "category2_sender_identity", "category3_context", "category4_handler"]
+      "required": [
+        "category0_reviewed",
+        "category1_type",
+        "category2_sender_identity",
+        "category3_context",
+        "category4_handler"
+      ]
     },
     "rulesMatched": {
       "type": "array",

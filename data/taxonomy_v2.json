@@ -6,9 +6,7 @@
       "id": 0,
       "name": "reviewed",
       "required": true,
-      "labels": [
-        "reviewed"
-      ]
+      "labels": ["reviewed"]
     },
     {
       "id": 1,
@@ -57,10 +55,7 @@
       "id": 4,
       "name": "handler",
       "required": true,
-      "labels": [
-        "user action required",
-        "no action required"
-      ]
+      "labels": ["user action required", "no action required"]
     }
   ]
 }

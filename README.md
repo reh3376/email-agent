@@ -70,20 +70,20 @@ schemas/                # JSON Schema definitions
 
 The assistant uses a **5-category classification taxonomy** that's fully customizable:
 
-| Category | Purpose | Example Labels |
-|----------|---------|---------------|
-| **0. Reviewed** | Control/tracking | `reviewed` |
-| **1. Type** | Email purpose | `work/WhiskeyHouse`, `personal`, `professional` |
-| **2. Sender Identity** | Who sent it | `friend`, `co-worker`, `vendor`, `marketer` |
-| **3. Context** | What it's about | `meeting request`, `information request`, `promotional` |
-| **4. Handler** | Action needed | `user action required`, `no action required` |
+| Category               | Purpose          | Example Labels                                          |
+| ---------------------- | ---------------- | ------------------------------------------------------- |
+| **0. Reviewed**        | Control/tracking | `reviewed`                                              |
+| **1. Type**            | Email purpose    | `work/WhiskeyHouse`, `personal`, `professional`         |
+| **2. Sender Identity** | Who sent it      | `friend`, `co-worker`, `vendor`, `marketer`             |
+| **3. Context**         | What it's about  | `meeting request`, `information request`, `promotional` |
+| **4. Handler**         | Action needed    | `user action required`, `no action required`            |
 
 ## ⚙️ Configuration & Data Files
 
 ### Core Data Files
 
 - **`data/taxonomy_v2.json`** - Defines classification categories and labels
-- **`data/ruleset_v2.json`** - Contains processing rules with conditions and actions  
+- **`data/ruleset_v2.json`** - Contains processing rules with conditions and actions
 - **`data/contacts.json`** - Stores contact information with rich metadata
 - **`data/decisions/YYYY-MM-DD.ndjson`** - Daily append-only decision logs
 
@@ -99,7 +99,7 @@ The assistant uses a **5-category classification taxonomy** that's fully customi
       "allOf": [
         {
           "path": "$.classification.category3_context",
-          "op": "eq", 
+          "op": "eq",
           "value": "request for meeting"
         }
       ]
@@ -118,15 +118,15 @@ The assistant uses a **5-category classification taxonomy** that's fully customi
 
 ### Core Endpoints
 
-| Endpoint | Method | Description |
-|----------|---------|-------------|
-| `/taxonomy` | GET/PUT | Manage classification taxonomy |
-| `/rules` | GET/PUT | Manage processing rules |
-| `/decisions` | GET/POST | Access decision history |
-| `/ml/classify` | POST | Classify email content |
-| `/learn/feedback` | POST | Submit learning feedback |
-| `/graph/query` | GET | Query relationship graph |
-| `/graph/ingest` | POST | Add graph data |
+| Endpoint          | Method   | Description                    |
+| ----------------- | -------- | ------------------------------ |
+| `/taxonomy`       | GET/PUT  | Manage classification taxonomy |
+| `/rules`          | GET/PUT  | Manage processing rules        |
+| `/decisions`      | GET/POST | Access decision history        |
+| `/ml/classify`    | POST     | Classify email content         |
+| `/learn/feedback` | POST     | Submit learning feedback       |
+| `/graph/query`    | GET      | Query relationship graph       |
+| `/graph/ingest`   | POST     | Add graph data                 |
 
 ### Example API Usage
 
@@ -158,6 +158,7 @@ uv run python scripts/train_classifier.py \
 ```
 
 The classifier uses:
+
 - **Hashing Vectorizer** - Deterministic feature extraction without vocabulary storage
 - **Multi-head Linear Model** - 4 separate heads for categories 1-4
 - **PyTorch Backend** - Lightweight and fast inference
@@ -165,7 +166,7 @@ The classifier uses:
 ### Learning Loop
 
 1. **Ingest & Infer** - Process incoming emails with local classifier + LLM
-2. **Decide & Act** - Apply rules and log immutable decisions  
+2. **Decide & Act** - Apply rules and log immutable decisions
 3. **Teach** - Collect user feedback and corrections
 4. **Retrain** - Nightly model updates from accumulated data
 5. **Audit** - Query decision history via graph database
@@ -174,12 +175,12 @@ The classifier uses:
 
 ### Supported Providers
 
-| Provider | Email | Calendar | Status |
-|----------|--------|----------|---------|
-| **Google** | Gmail API | Google Calendar | ✅ Supported |
-| **Microsoft** | Graph API | Outlook Calendar | ✅ Supported |  
-| **Exchange** | EWS/Graph | Exchange | ⏳ Planned |
-| **IMAP/SMTP** | Generic | N/A | ✅ Supported |
+| Provider      | Email     | Calendar         | Status       |
+| ------------- | --------- | ---------------- | ------------ |
+| **Google**    | Gmail API | Google Calendar  | ✅ Supported |
+| **Microsoft** | Graph API | Outlook Calendar | ✅ Supported |
+| **Exchange**  | EWS/Graph | Exchange         | ⏳ Planned   |
+| **IMAP/SMTP** | Generic   | N/A              | ✅ Supported |
 
 ### Conflict Detection
 
@@ -192,7 +193,7 @@ The assistant automatically checks for calendar conflicts when processing meetin
     "conflictDetails": [
       {
         "start": "2025-01-15T14:00:00Z",
-        "end": "2025-01-15T15:00:00Z", 
+        "end": "2025-01-15T15:00:00Z",
         "title": "Existing Meeting"
       }
     ]
@@ -219,7 +220,7 @@ uv run pytest tests/
 # Run with coverage
 uv run pytest --cov=src/email_assistant tests/
 
-# Lint and format code  
+# Lint and format code
 uv run ruff check --fix .
 uv run ruff format .
 ```
@@ -236,7 +237,7 @@ email-agent/
 │   └── stores.py           # Data persistence layer
 ├── schemas/                 # JSON Schema definitions
 │   ├── taxonomy.schema.json
-│   ├── ruleset.schema.json  
+│   ├── ruleset.schema.json
 │   ├── contacts.schema.json
 │   └── decision.schema.json
 ├── data/                    # Application data
@@ -262,8 +263,9 @@ mcp register openapi_3_1.json --name email-assistant --url http://127.0.0.1:8765
 ```
 
 Exposed MCP resources:
+
 - `taxonomy_active` - Current classification taxonomy
-- `ruleset_active` - Active processing rules  
+- `ruleset_active` - Active processing rules
 - `samples` - Example classifications
 - `decisions_today` - Today's decisions
 
@@ -276,7 +278,7 @@ Exposed MCP resources:
   "stores": {
     "root": "data/",
     "taxonomy": "data/taxonomy_v2.json",
-    "ruleset": "data/ruleset_v2.json", 
+    "ruleset": "data/ruleset_v2.json",
     "contacts": "data/contacts.json",
     "decisions": "data/decisions/"
   },
@@ -298,7 +300,7 @@ Exposed MCP resources:
       "credentials": "stored_in_keychain"
     },
     "secondary": {
-      "provider": "outlook", 
+      "provider": "outlook",
       "credentials": "stored_in_keychain"
     }
   }
@@ -318,14 +320,22 @@ Create sophisticated rules using JSONPath conditions:
   "when": [
     {
       "allOf": [
-        {"path": "$.classification.category2_sender_identity", "op": "eq", "value": "vendor"},
-        {"path": "$.message.subject", "op": "regex", "value": "URGENT|HIGH PRIORITY"}
+        {
+          "path": "$.classification.category2_sender_identity",
+          "op": "eq",
+          "value": "vendor"
+        },
+        {
+          "path": "$.message.subject",
+          "op": "regex",
+          "value": "URGENT|HIGH PRIORITY"
+        }
       ]
     }
   ],
   "then": [
-    {"type": "set_flag", "params": {"key": "urgent", "value": true}},
-    {"type": "set_handler", "params": {"value": "user action required"}}
+    { "type": "set_flag", "params": { "key": "urgent", "value": true } },
+    { "type": "set_handler", "params": { "value": "user action required" } }
   ]
 }
 ```

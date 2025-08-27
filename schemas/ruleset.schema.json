@@ -52,7 +52,16 @@
                       },
                       "op": {
                         "type": "string",
-                        "enum": ["exists", "eq", "in", "lt", "lte", "gt", "gte", "regex"],
+                        "enum": [
+                          "exists",
+                          "eq",
+                          "in",
+                          "lt",
+                          "lte",
+                          "gt",
+                          "gte",
+                          "regex"
+                        ],
                         "description": "Comparison operator"
                       },
                       "value": {
