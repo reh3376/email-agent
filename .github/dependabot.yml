@@ -1,29 +1,29 @@
 version: 2
 updates:
   # Enable version updates for Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: 'pip'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
     open-pull-requests-limit: 5
     assignees:
-      - "reh3376"
+      - 'reh3376'
     labels:
-      - "dependencies"
-      - "python"
+      - 'dependencies'
+      - 'python'
 
   # Enable version updates for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
+      interval: 'weekly'
+      day: 'monday'
+      time: '04:00'
     open-pull-requests-limit: 5
     assignees:
-      - "reh3376"
+      - 'reh3376'
     labels:
-      - "dependencies"
-      - "github-actions"
+      - 'dependencies'
+      - 'github-actions'
