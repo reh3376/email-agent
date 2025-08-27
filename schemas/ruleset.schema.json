@@ -1,106 +1,239 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://email-agent.local/schemas/ruleset.schema.json",
-  "title": "Email Processing Ruleset Schema",
-  "description": "JSON Schema for email processing rules configuration",
+  "$id": "https://email-assistant.local/schemas/ruleset.json",
+  "title": "Email Processing Ruleset",
+  "description": "Schema for email processing rules with conditions and actions",
   "type": "object",
+  "required": ["type", "version", "rules"],
   "properties": {
     "type": {
       "type": "string",
-      "const": "ruleset",
-      "description": "The type identifier for ruleset files"
+      "const": "email_rules",
+      "description": "Type identifier for ruleset"
     },
     "version": {
       "type": "string",
       "pattern": "^v\\d+$",
-      "description": "Version identifier (e.g., 'v2')"
+      "description": "Version identifier (e.g., v2)"
     },
     "rules": {
       "type": "array",
-      "description": "Array of processing rules",
+      "description": "List of processing rules",
       "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Unique rule identifier"
-          },
-          "description": {
-            "type": "string",
-            "description": "Human-readable rule description"
-          },
-          "priority": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Rule execution priority (higher numbers = higher priority)"
-          },
-          "when": {
-            "type": "array",
-            "description": "Conditions that must be met for rule to apply",
-            "items": {
+        "$ref": "#/definitions/rule"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "author": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rule": {
+      "type": "object",
+      "required": ["id", "name", "priority", "conditions", "actions"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Unique rule identifier"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable rule name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional rule description"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Rule priority (lower numbers = higher priority)"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the rule is active"
+        },
+        "conditions": {
+          "type": "array",
+          "description": "Conditions that must be met for the rule to apply",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/condition"
+          }
+        },
+        "actions": {
+          "type": "array",
+          "description": "Actions to execute when conditions are met",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/action"
+          }
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "required": ["field", "operator", "value"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Field to evaluate",
+          "enum": [
+            "subject",
+            "body",
+            "from",
+            "to",
+            "cc",
+            "classification.type",
+            "classification.senderIdentity",
+            "classification.context",
+            "classification.handler",
+            "hasAttachments",
+            "attachmentCount"
+          ]
+        },
+        "operator": {
+          "type": "string",
+          "description": "Comparison operator",
+          "enum": ["exists", "eq", "in", "lt", "lte", "gt", "gte", "regex"]
+        },
+        "value": {
+          "description": "Value to compare against",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "logic": {
+          "type": "string",
+          "enum": ["AND", "OR"],
+          "default": "AND",
+          "description": "Logic operator for multiple conditions"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Action type",
+          "enum": [
+            "set_classification",
+            "mark_read",
+            "mark_unread",
+            "create_calendar_event",
+            "save_to_folder",
+            "add_contact",
+            "report_junk",
+            "delete",
+            "forward",
+            "flag",
+            "add_label"
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Action-specific parameters",
+          "properties": {
+            "category": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4,
+              "description": "Category ID for set_classification"
+            },
+            "label": {
+              "type": "string",
+              "description": "Label value for set_classification or add_label"
+            },
+            "folder": {
+              "type": "string",
+              "description": "Folder path for save_to_folder"
+            },
+            "event": {
               "type": "object",
+              "description": "Calendar event details",
               "properties": {
-                "allOf": {
+                "title": { "type": "string" },
+                "startTime": { "type": "string", "format": "date-time" },
+                "endTime": { "type": "string", "format": "date-time" },
+                "location": { "type": "string" },
+                "description": { "type": "string" },
+                "reminder": {
+                  "type": "integer",
+                  "description": "Reminder in minutes"
+                }
+              }
+            },
+            "contact": {
+              "type": "object",
+              "description": "Contact information for add_contact",
+              "properties": {
+                "name": { "type": "string" },
+                "emails": {
+                  "type": "array",
+                  "items": { "type": "string", "format": "email" }
+                },
+                "phones": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "addresses": {
                   "type": "array",
                   "items": {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "type": {
                         "type": "string",
-                        "description": "JSONPath to the value being tested"
+                        "enum": ["home", "work", "other"]
                       },
-                      "op": {
-                        "type": "string",
-                        "enum": [
-                          "exists",
-                          "eq",
-                          "in",
-                          "lt",
-                          "lte",
-                          "gt",
-                          "gte",
-                          "regex"
-                        ],
-                        "description": "Comparison operator"
-                      },
-                      "value": {
-                        "description": "Value to compare against (type varies by operator)"
-                      }
-                    },
-                    "required": ["path", "op"],
-                    "additionalProperties": false
+                      "street": { "type": "string" },
+                      "city": { "type": "string" },
+                      "state": { "type": "string" },
+                      "postalCode": { "type": "string" },
+                      "country": { "type": "string" }
+                    }
                   }
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "then": {
-            "type": "array",
-            "description": "Actions to execute when conditions are met",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "description": "Action type"
                 },
-                "params": {
-                  "type": "object",
-                  "description": "Action parameters"
-                }
-              },
-              "required": ["type"],
-              "additionalProperties": false
+                "company": { "type": "string" },
+                "title": { "type": "string" },
+                "notes": { "type": "string" }
+              }
+            },
+            "forwardTo": {
+              "type": "array",
+              "items": { "type": "string", "format": "email" },
+              "description": "Email addresses for forward action"
+            },
+            "color": {
+              "type": "string",
+              "description": "Flag color",
+              "enum": ["red", "orange", "yellow", "green", "blue", "purple"]
             }
           }
-        },
-        "required": ["id", "priority", "when", "then"],
-        "additionalProperties": false
+        }
       }
     }
   },
-  "required": ["type", "version", "rules"],
   "additionalProperties": false
 }

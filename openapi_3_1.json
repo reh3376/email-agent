@@ -1,0 +1,1206 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Email Assistant Local API",
+    "version": "1.0.0",
+    "description": "Local API for Email Assistant desktop application with MCP integration",
+    "x-mcp": {
+      "description": "Email Assistant provides intelligent email classification, rule-based actions, and daily digest generation",
+      "safety": {
+        "localOnly": true,
+        "dataPrivacy": "All data remains local",
+        "authentication": "OS-level authentication required"
+      },
+      "resources": {
+        "taxonomy_active": "Current email classification taxonomy",
+        "ruleset_active": "Active processing rules",
+        "samples": "Sample emails for testing",
+        "decisions_today": "Today's email decisions"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8765",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/taxonomy": {
+      "get": {
+        "summary": "Get current taxonomy",
+        "operationId": "getTaxonomy",
+        "tags": ["Taxonomy"],
+        "responses": {
+          "200": {
+            "description": "Current taxonomy configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Taxonomy"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update taxonomy",
+        "operationId": "putTaxonomy",
+        "tags": ["Taxonomy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Taxonomy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Taxonomy updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Taxonomy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/taxonomy/versions": {
+      "get": {
+        "summary": "List taxonomy versions",
+        "operationId": "getTaxonomyVersions",
+        "tags": ["Taxonomy"],
+        "responses": {
+          "200": {
+            "description": "List of taxonomy versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VersionInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new taxonomy version",
+        "operationId": "createTaxonomyVersion",
+        "tags": ["Taxonomy"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Taxonomy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New taxonomy version created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules": {
+      "get": {
+        "summary": "Get current ruleset",
+        "operationId": "getRules",
+        "tags": ["Rules"],
+        "responses": {
+          "200": {
+            "description": "Current ruleset configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ruleset"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update ruleset",
+        "operationId": "putRules",
+        "tags": ["Rules"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ruleset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ruleset updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ruleset"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/versions": {
+      "get": {
+        "summary": "List ruleset versions",
+        "operationId": "getRulesVersions",
+        "tags": ["Rules"],
+        "responses": {
+          "200": {
+            "description": "List of ruleset versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VersionInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new ruleset version",
+        "operationId": "createRulesVersion",
+        "tags": ["Rules"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ruleset"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New ruleset version created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scheduler/preview": {
+      "get": {
+        "summary": "Preview next scheduled runs",
+        "operationId": "getSchedulerPreview",
+        "tags": ["Scheduler"],
+        "parameters": [
+          {
+            "name": "schedule",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Schedule expression (cron, RRULE, or preset)"
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "Number of future runs to preview"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preview of next scheduled runs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulePreview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decisions": {
+      "get": {
+        "summary": "List email decisions",
+        "operationId": "getDecisions",
+        "tags": ["Decisions"],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Filter by date (YYYY-MM-DD)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of email decisions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Decision"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new decision",
+        "operationId": "createDecision",
+        "tags": ["Decisions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Decision created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decisions/{id}": {
+      "get": {
+        "summary": "Get decision by ID",
+        "operationId": "getDecisionById",
+        "tags": ["Decisions"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decision details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision not found"
+          }
+        }
+      }
+    },
+    "/learn/feedback": {
+      "post": {
+        "summary": "Submit learning feedback",
+        "operationId": "submitFeedback",
+        "tags": ["Learning"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/graph/ingest": {
+      "post": {
+        "summary": "Ingest data into graph",
+        "operationId": "graphIngest",
+        "tags": ["Graph"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphIngestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data ingested successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphIngestResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/graph/query": {
+      "get": {
+        "summary": "Query graph database",
+        "operationId": "graphQuery",
+        "tags": ["Graph"],
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["sparql", "cypher"],
+              "default": "sparql"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Query string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Query results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphQueryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ml/classify": {
+      "post": {
+        "summary": "Classify email using ML model",
+        "operationId": "classifyEmail",
+        "tags": ["ML"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Classification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Model not trained",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attachments/{messageId}": {
+      "get": {
+        "summary": "List attachments for an email",
+        "operationId": "listAttachments",
+        "tags": ["Attachments"],
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Email message ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of attachments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AttachmentInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attachments/{messageId}/{filename}": {
+      "get": {
+        "summary": "Download specific attachment",
+        "operationId": "getAttachment",
+        "tags": ["Attachments"],
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Email message ID"
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Attachment filename"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attachment file",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Attachment not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove attachment",
+        "operationId": "deleteAttachment",
+        "tags": ["Attachments"],
+        "parameters": [
+          {
+            "name": "messageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Email message ID"
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Attachment filename"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attachment deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Attachment not found"
+          }
+        }
+      }
+    },
+    "/attachments/stats": {
+      "get": {
+        "summary": "Get attachment storage statistics",
+        "operationId": "getAttachmentStats",
+        "tags": ["Attachments"],
+        "responses": {
+          "200": {
+            "description": "Storage statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Taxonomy": {
+        "type": "object",
+        "required": ["type", "version", "categories"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["email_categories"]
+          },
+          "version": {
+            "type": "string",
+            "example": "v2"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "required": ["id", "name", "labels"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "name": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Ruleset": {
+        "type": "object",
+        "required": ["type", "version", "rules"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["email_rules"]
+          },
+          "version": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rule"
+            }
+          }
+        }
+      },
+      "Rule": {
+        "type": "object",
+        "required": ["id", "name", "priority", "conditions", "actions"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Condition": {
+        "type": "object",
+        "required": ["field", "operator", "value"],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "enum": ["exists", "eq", "in", "lt", "lte", "gt", "gte", "regex"]
+          },
+          "value": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "array" }
+            ]
+          }
+        }
+      },
+      "Action": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "set_classification",
+              "mark_read",
+              "create_calendar_event",
+              "save_to_folder",
+              "add_contact",
+              "report_junk",
+              "delete"
+            ]
+          },
+          "parameters": {
+            "type": "object"
+          }
+        }
+      },
+      "Decision": {
+        "type": "object",
+        "required": [
+          "messageId",
+          "timestamp",
+          "classification",
+          "features",
+          "rulesMatched",
+          "actions"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "classification": {
+            "$ref": "#/components/schemas/Classification"
+          },
+          "features": {
+            "$ref": "#/components/schemas/EmailFeatures"
+          },
+          "rulesMatched": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExecutedAction"
+            }
+          },
+          "calendarConflicts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CalendarConflict"
+            }
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "reviewCount": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of times this email has appeared in summaries"
+          },
+          "reviewCountThreshold": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "User-defined threshold for review count"
+          },
+          "reviewCountExceeded": {
+            "type": "boolean",
+            "default": false,
+            "description": "Flag indicating review count has exceeded threshold"
+          },
+          "lastReviewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of last review"
+          }
+        }
+      },
+      "Classification": {
+        "type": "object",
+        "required": [
+          "reviewed",
+          "type",
+          "senderIdentity",
+          "context",
+          "handler"
+        ],
+        "properties": {
+          "reviewed": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "senderIdentity": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "handler": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailFeatures": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attachment"
+            }
+          }
+        }
+      },
+      "Attachment": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          }
+        }
+      },
+      "ExecutedAction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed", "pending"]
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      },
+      "CalendarConflict": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "VersionInfo": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "SchedulePreview": {
+        "type": "object",
+        "properties": {
+          "schedule": {
+            "type": "string"
+          },
+          "nextRuns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "FeedbackBatch": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackItem"
+            }
+          }
+        }
+      },
+      "FeedbackItem": {
+        "type": "object",
+        "properties": {
+          "decisionId": {
+            "type": "string"
+          },
+          "correctedClassification": {
+            "$ref": "#/components/schemas/Classification"
+          },
+          "feedback": {
+            "type": "string"
+          }
+        }
+      },
+      "FeedbackResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "integer"
+          },
+          "graphUpserts": {
+            "type": "integer"
+          }
+        }
+      },
+      "GraphIngestRequest": {
+        "type": "object",
+        "properties": {
+          "batch": {
+            "type": "object",
+            "properties": {
+              "triples": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Triple"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Triple": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "predicate": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          }
+        }
+      },
+      "GraphIngestResponse": {
+        "type": "object",
+        "properties": {
+          "tripleCount": {
+            "type": "integer"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GraphQueryResponse": {
+        "type": "object",
+        "properties": {
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "array"
+            }
+          }
+        }
+      },
+      "ClassificationRequest": {
+        "type": "object",
+        "required": ["subject", "body"],
+        "properties": {
+          "messageId": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ClassificationResponse": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "classification": {
+            "$ref": "#/components/schemas/Classification"
+          },
+          "features": {
+            "$ref": "#/components/schemas/EmailFeatures"
+          },
+          "rulesMatched": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "AttachmentInfo": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "modified": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "AttachmentStats": {
+        "type": "object",
+        "properties": {
+          "totalFiles": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalSizeBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "oldestFile": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "newestFile": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "byMimeType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "byMessageId": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

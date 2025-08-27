@@ -1,135 +1,177 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://email-agent.local/schemas/contacts.schema.json",
-  "title": "Contacts Schema",
-  "description": "JSON Schema for contacts storage",
+  "$id": "https://email-assistant.local/schemas/contacts.json",
+  "title": "Contact List",
+  "description": "Schema for contact information storage",
   "type": "array",
-  "description": "Array of contact records",
   "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string",
-        "description": "Unique contact identifier"
-      },
-      "name": {
-        "type": "object",
-        "properties": {
-          "first": {
-            "type": "string",
-            "minLength": 1
-          },
-          "last": {
-            "type": "string",
-            "minLength": 1
-          },
-          "full": {
-            "type": "string",
-            "description": "Full display name"
-          }
+    "$ref": "#/definitions/contact"
+  },
+  "definitions": {
+    "contact": {
+      "type": "object",
+      "required": ["id", "name", "emails"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Unique contact identifier"
         },
-        "required": ["first", "last"]
-      },
-      "emails": {
-        "type": "array",
-        "description": "Email addresses associated with this contact",
-        "items": {
-          "type": "object",
-          "properties": {
-            "address": {
-              "type": "string",
-              "format": "email"
-            },
-            "type": {
-              "type": "string",
-              "enum": ["work", "personal", "other"]
-            },
-            "primary": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          "required": ["address"]
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Contact's full name"
         },
-        "minItems": 1
-      },
-      "phones": {
-        "type": "array",
-        "description": "Phone numbers associated with this contact",
-        "items": {
-          "type": "object",
-          "properties": {
-            "number": {
-              "type": "string"
-            },
-            "type": {
-              "type": "string",
-              "enum": ["mobile", "work", "home", "other"]
-            },
-            "primary": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          "required": ["number"]
-        }
-      },
-      "addresses": {
-        "type": "array",
-        "description": "Physical addresses associated with this contact",
-        "items": {
-          "type": "object",
-          "properties": {
-            "street": {
-              "type": "string"
-            },
-            "city": {
-              "type": "string"
-            },
-            "state": {
-              "type": "string"
-            },
-            "zip": {
-              "type": "string"
-            },
-            "country": {
-              "type": "string"
-            },
-            "type": {
-              "type": "string",
-              "enum": ["work", "home", "other"]
+        "firstName": {
+          "type": "string",
+          "description": "Contact's first name"
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Contact's last name"
+        },
+        "emails": {
+          "type": "array",
+          "description": "Email addresses",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["address"],
+            "properties": {
+              "address": {
+                "type": "string",
+                "format": "email"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["personal", "work", "other"],
+                "default": "personal"
+              },
+              "primary": {
+                "type": "boolean",
+                "default": false
+              }
             }
           }
-        }
-      },
-      "organization": {
-        "type": "string",
-        "description": "Organization or company name"
-      },
-      "title": {
-        "type": "string",
-        "description": "Job title or role"
-      },
-      "created": {
-        "type": "string",
-        "format": "date-time",
-        "description": "When this contact was created"
-      },
-      "updated": {
-        "type": "string",
-        "format": "date-time",
-        "description": "When this contact was last updated"
-      },
-      "tags": {
-        "type": "array",
-        "description": "Tags for categorizing contacts",
-        "items": {
-          "type": "string"
         },
-        "uniqueItems": true
+        "phones": {
+          "type": "array",
+          "description": "Phone numbers",
+          "items": {
+            "type": "object",
+            "required": ["number"],
+            "properties": {
+              "number": {
+                "type": "string",
+                "pattern": "^[+]?[0-9\\s()-]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["mobile", "home", "work", "other"],
+                "default": "mobile"
+              },
+              "primary": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "addresses": {
+          "type": "array",
+          "description": "Physical addresses",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["home", "work", "other"],
+                "default": "home"
+              },
+              "street": {
+                "type": "string"
+              },
+              "street2": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string"
+              },
+              "postalCode": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "primary": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        },
+        "company": {
+          "type": "string",
+          "description": "Company or organization name"
+        },
+        "title": {
+          "type": "string",
+          "description": "Job title"
+        },
+        "department": {
+          "type": "string",
+          "description": "Department"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags for categorization",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "socialProfiles": {
+          "type": "object",
+          "description": "Social media profiles",
+          "properties": {
+            "linkedin": { "type": "string", "format": "uri" },
+            "twitter": { "type": "string" },
+            "facebook": { "type": "string", "format": "uri" },
+            "instagram": { "type": "string" },
+            "github": { "type": "string" }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Metadata",
+          "properties": {
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "source": {
+              "type": "string",
+              "description": "How the contact was added",
+              "enum": ["manual", "email", "import", "api"]
+            },
+            "lastContactedAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
       }
-    },
-    "required": ["id", "name", "emails"],
-    "additionalProperties": false
+    }
   }
 }

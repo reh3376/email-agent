@@ -57,6 +57,7 @@ dependencies = [
   "python-dateutil>=2.8",
   "pytz>=2023.3",
   "icalendar>=5.0",
+  "croniter>=2.0",
   
   # CLI Interface
   "typer>=0.12",

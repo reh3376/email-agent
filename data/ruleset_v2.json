@@ -1,5 +1,5 @@
 {
-  "type": "ruleset",
+  "type": "email_rules",
   "version": "v2",
   "rules": [
     {
@@ -45,7 +45,7 @@
       ],
       "then": [
         {
-          "type": "add_contact" # <note build the contact object out so it can accomodate the standard contacts data /note>
+          "type": "add_contact"
         }
       ]
     },

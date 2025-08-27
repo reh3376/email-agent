@@ -216,7 +216,46 @@ uv run python scripts/train_classifier.py --data data/decisions \
 
 ---
 
-## 14) Current Defaults Snapshot
+## 14) Attachment Management Framework
+
+### Storage Strategy
+
+- **Base Path**: Primary attachment directory from settings (required)
+- **Structure**: `{base}/YYYY-MM-DD/{messageId}/{filename}`
+- **Deduplication**: SHA256 hash-based; store once, reference many
+- **Metadata**: Track filename, MIME type, size, hash, storage path in Decision records
+
+### Processing Pipeline
+
+1. **Download**: Fetch attachments during email processing
+2. **Scan**: Optional virus/malware scanning integration point
+3. **Hash**: Generate SHA256 for deduplication and integrity
+4. **Store**: Save to structured directory with proper permissions
+5. **Index**: Update Decision record with attachment metadata
+
+### Access Controls
+
+- **Permissions**: User-only read/write (700) on attachment directories
+- **Cleanup**: Configurable retention policy (default: 90 days)
+- **Backup**: Exclude from cloud sync by default (privacy)
+
+### API Endpoints
+
+- `GET /attachments/{messageId}`: List attachments for an email
+- `GET /attachments/{messageId}/{filename}`: Download specific attachment
+- `DELETE /attachments/{messageId}/{filename}`: Remove attachment
+- `GET /attachments/stats`: Storage usage statistics
+
+### Security Considerations
+
+- **Path Traversal**: Validate all paths; reject `..` and absolute paths
+- **File Types**: Configurable allowed/blocked MIME types
+- **Size Limits**: Per-file (default: 25MB) and total storage quotas
+- **Encryption**: Optional at-rest encryption for sensitive attachments
+
+---
+
+## 15) Current Defaults Snapshot
 
 - **Taxonomy v2** and **Ruleset v2** are active (see `data/`).
 - Scheduler: hourly; advanced scheduling available.
@@ -224,7 +263,7 @@ uv run python scripts/train_classifier.py --data data/decisions \
 
 ---
 
-## 15) Next Milestones
+## 16) Next Milestones
 
 - Wire **Oxigraph** read/write (`/graph/ingest`, `/graph/query`) and SPARQL
   templates for common "why" queries.

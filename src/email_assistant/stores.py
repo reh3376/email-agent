@@ -41,17 +41,95 @@ class NdjsonStore:
         return out
 
     def scan(
-        self, start: str | None = None, end: str | None = None, limit: int = 1000
+        self, 
+        date: str | None = None,
+        start: str | None = None, 
+        end: str | None = None, 
+        limit: int = 1000
     ) -> list[dict[str, Any]]:
+        """Scan NDJSON files for records.
+        
+        Args:
+            date: Specific date (YYYY-MM-DD) to filter by
+            start: Start date (YYYY-MM-DD) for range filtering
+            end: End date (YYYY-MM-DD) for range filtering
+            limit: Maximum number of records to return
+        
+        Returns:
+            List of decision records
+        """
+        files = self._get_files_to_scan(date, start, end)
+        return self._read_files(files, limit)
+    
+    def _get_files_to_scan(
+        self, 
+        date: str | None,
+        start: str | None,
+        end: str | None
+    ) -> list[str]:
+        """Get list of files to scan based on filters."""
+        if date:
+            # Specific date filtering
+            file_path = str(self.dir / f"{date}.ndjson")
+            return [file_path] if os.path.exists(file_path) else []
+        
+        # Get all files
         files = sorted(glob.glob(str(self.dir / "*.ndjson")))
+        
+        # Apply date range filter if specified
+        if start or end:
+            return self._filter_files_by_date_range(files, start, end)
+        
+        return files
+    
+    def _filter_files_by_date_range(
+        self,
+        files: list[str],
+        start: str | None,
+        end: str | None
+    ) -> list[str]:
+        """Filter files by date range."""
+        filtered_files = []
+        
+        for f in files:
+            filename = os.path.basename(f)
+            file_date = filename.replace(".ndjson", "")
+            
+            if start and file_date < start:
+                continue
+            if end and file_date > end:
+                continue
+            
+            filtered_files.append(f)
+        
+        return filtered_files
+    
+    def _read_files(self, files: list[str], limit: int) -> list[dict[str, Any]]:
+        """Read records from files up to limit."""
         rows: list[dict[str, Any]] = []
-        for p in files:
-            with open(p, encoding="utf-8") as f:
-                for line in f:
-                    try:
-                        rows.append(json.loads(line))
-                    except Exception:
-                        continue
-                    if len(rows) >= limit:
-                        return rows
+        
+        for file_path in files:
+            if not os.path.exists(file_path):
+                continue
+            
+            rows.extend(self._read_file(file_path, limit - len(rows)))
+            
+            if len(rows) >= limit:
+                break
+        
         return rows
+    
+    def _read_file(self, file_path: str, max_records: int) -> list[dict[str, Any]]:
+        """Read records from a single file."""
+        records = []
+        
+        with open(file_path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    records.append(json.loads(line))
+                    if len(records) >= max_records:
+                        break
+                except Exception:
+                    continue
+        
+        return records

@@ -21,6 +21,29 @@
     "epochs": 3,
     "learning_rate": 0.5
   },
+  "attachments": {
+    "basePath": "data/attachments",
+    "retentionDays": 90,
+    "maxFileSizeMB": 25,
+    "allowedMimeTypes": [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.*",
+      "application/vnd.ms-excel",
+      "application/vnd.ms-powerpoint",
+      "text/plain",
+      "text/csv",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/zip"
+    ],
+    "blockedExtensions": [".exe", ".bat", ".cmd", ".scr", ".vbs", ".js"]
+  },
+  "reviewTracking": {
+    "defaultThreshold": 3,
+    "enableAutoFlag": true
+  },
   "timezone": "America/Kentucky/Louisville",
   "logging": {
     "level": "INFO",

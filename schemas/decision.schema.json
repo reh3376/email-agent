@@ -1,206 +1,317 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://email-agent.local/schemas/decision.schema.json",
-  "title": "Email Processing Decision Schema",
-  "description": "JSON Schema for email processing decision records (NDJSON entries)",
+  "$id": "https://email-assistant.local/schemas/decision.json",
+  "title": "Email Decision",
+  "description": "Schema for individual email processing decisions (stored as NDJSON)",
   "type": "object",
+  "required": [
+    "id",
+    "messageId",
+    "timestamp",
+    "email",
+    "classification",
+    "rulesMatched",
+    "actions"
+  ],
   "properties": {
     "id": {
       "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
       "description": "Unique decision identifier"
+    },
+    "messageId": {
+      "type": "string",
+      "description": "Email message ID"
     },
     "timestamp": {
       "type": "string",
       "format": "date-time",
-      "description": "When this decision was made"
+      "description": "Decision timestamp"
     },
-    "messageId": {
-      "type": "string",
-      "description": "Email message identifier"
-    },
-    "message": {
+    "email": {
       "type": "object",
+      "description": "Email details",
+      "required": ["subject", "from", "to", "receivedAt"],
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "subject": {
           "type": "string"
         },
         "from": {
-          "type": "object",
-          "properties": {
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "name": {
-              "type": "string"
-            },
-            "domain": {
-              "type": "string"
-            },
-            "localpart": {
-              "type": "string"
-            }
-          },
-          "required": ["email"]
+          "type": "string",
+          "format": "email"
         },
         "to": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "email": {
-                "type": "string",
-                "format": "email"
-              },
-              "name": {
-                "type": "string"
-              }
-            },
-            "required": ["email"]
+            "type": "string",
+            "format": "email"
           }
         },
-        "date": {
+        "cc": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "bcc": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "replyTo": {
+          "type": "string",
+          "format": "email"
+        },
+        "receivedAt": {
           "type": "string",
           "format": "date-time"
         },
-        "body": {
+        "sentAt": {
           "type": "string",
-          "description": "Email body text"
+          "format": "date-time",
+          "description": "When the email was sent"
+        },
+        "bodyPreview": {
+          "type": "string",
+          "description": "First 500 characters of body"
+        },
+        "hasAttachments": {
+          "type": "boolean"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["filename", "mimeType", "size"],
+            "properties": {
+              "filename": { "type": "string" },
+              "mimeType": { "type": "string" },
+              "size": { "type": "integer", "minimum": 0 },
+              "storagePath": {
+                "type": "string",
+                "description": "Local path where attachment is stored"
+              },
+              "sha256Hash": {
+                "type": "string",
+                "description": "SHA256 hash of the attachment"
+              }
+            }
+          }
+        },
+        "attachmentCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of attachments"
+        },
+        "importance": {
+          "type": "string",
+          "enum": ["low", "normal", "high"]
+        },
+        "isRead": {
+          "type": "boolean"
+        },
+        "isFlagged": {
+          "type": "boolean"
         }
-      },
-      "required": ["id", "subject", "from", "date"]
+      }
     },
     "classification": {
       "type": "object",
+      "description": "5-tuple classification result",
+      "required": ["reviewed", "type", "senderIdentity", "context", "handler"],
       "properties": {
-        "category0_reviewed": {
-          "type": "string"
+        "reviewed": {
+          "type": "string",
+          "description": "Category 0: reviewed status"
         },
-        "category1_type": {
-          "type": "string"
+        "type": {
+          "type": "string",
+          "description": "Category 1: email type"
         },
-        "category2_sender_identity": {
-          "type": "string"
+        "senderIdentity": {
+          "type": "string",
+          "description": "Category 2: sender identity"
         },
-        "category3_context": {
-          "type": "string"
+        "context": {
+          "type": "string",
+          "description": "Category 3: email context"
         },
-        "category4_handler": {
-          "type": "string"
+        "handler": {
+          "type": "string",
+          "description": "Category 4: action required"
+        },
+        "confidence": {
+          "type": "object",
+          "description": "Confidence scores for each category",
+          "properties": {
+            "type": { "type": "number", "minimum": 0, "maximum": 1 },
+            "senderIdentity": { "type": "number", "minimum": 0, "maximum": 1 },
+            "context": { "type": "number", "minimum": 0, "maximum": 1 },
+            "handler": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
         }
-      },
-      "required": [
-        "category0_reviewed",
-        "category1_type",
-        "category2_sender_identity",
-        "category3_context",
-        "category4_handler"
-      ]
+      }
     },
     "rulesMatched": {
       "type": "array",
-      "description": "Rules that matched for this message",
+      "description": "Rules that matched this email",
       "items": {
         "type": "object",
+        "required": ["ruleId", "ruleName"],
         "properties": {
           "ruleId": {
+            "type": "string"
+          },
+          "ruleName": {
             "type": "string"
           },
           "priority": {
             "type": "integer"
           },
-          "matched": {
-            "type": "boolean"
-          }
-        },
-        "required": ["ruleId", "matched"]
-      }
-    },
-    "actions": {
-      "type": "array",
-      "description": "Actions taken on this message",
-      "items": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "params": {
-            "type": "object"
-          },
-          "result": {
-            "type": "object",
-            "properties": {
-              "success": {
-                "type": "boolean"
-              },
-              "error": {
-                "type": "string"
-              }
-            },
-            "required": ["success"]
-          }
-        },
-        "required": ["type"]
-      }
-    },
-    "calendar": {
-      "type": "object",
-      "properties": {
-        "conflict": {
-          "type": "boolean",
-          "description": "Whether this message creates a calendar conflict"
-        },
-        "conflictDetails": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "start": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "end": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "title": {
-                "type": "string"
-              }
+          "conditionsMatched": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }
       }
     },
-    "contacts": {
-      "type": "object",
-      "properties": {
-        "sender_in_contacts": {
-          "type": "boolean"
+    "actions": {
+      "type": "array",
+      "description": "Actions executed",
+      "items": {
+        "type": "object",
+        "required": ["type", "status", "executedAt"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Action type"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed", "pending", "skipped"]
+          },
+          "executedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Action parameters"
+          },
+          "result": {
+            "type": "object",
+            "description": "Action result details"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if failed"
+          }
         }
       }
     },
-    "engine": {
+    "calendarConflicts": {
+      "type": "array",
+      "description": "Calendar conflicts detected",
+      "items": {
+        "type": "object",
+        "required": ["eventId", "startTime", "endTime", "title"],
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "calendar": {
+            "type": "string",
+            "enum": ["primary", "secondary"]
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "attendees": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      }
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Human-readable explanation of the decision"
+    },
+    "feedback": {
       "type": "object",
+      "description": "User feedback/corrections",
       "properties": {
-        "save_to_folder": {
-          "type": "boolean"
+        "correctedClassification": {
+          "type": "object",
+          "properties": {
+            "reviewed": { "type": "string" },
+            "type": { "type": "string" },
+            "senderIdentity": { "type": "string" },
+            "context": { "type": "string" },
+            "handler": { "type": "string" }
+          }
         },
-        "folder_path": {
+        "feedbackText": {
           "type": "string"
+        },
+        "feedbackAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
-    "flags": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "boolean"
-      }
+    "modelVersion": {
+      "type": "string",
+      "description": "ML model version used"
+    },
+    "processingTime": {
+      "type": "number",
+      "description": "Processing time in milliseconds"
+    },
+    "digestIncluded": {
+      "type": "boolean",
+      "description": "Whether included in daily digest"
+    },
+    "reviewCount": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of times this email has appeared in summaries"
+    },
+    "reviewCountThreshold": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "User-defined threshold for review count"
+    },
+    "reviewCountExceeded": {
+      "type": "boolean",
+      "default": false,
+      "description": "Flag indicating review count has exceeded threshold"
+    },
+    "lastReviewedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last review"
     }
   },
-  "required": ["id", "timestamp", "messageId", "message", "classification"],
   "additionalProperties": false
 }
