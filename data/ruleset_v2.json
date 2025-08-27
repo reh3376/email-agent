@@ -1,4 +1,6 @@
 {
+  "type": "ruleset",
+  "version": "v2",
   "rules": [
     {
       "id": "base-mark-read",

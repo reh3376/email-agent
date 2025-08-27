@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://email-agent.local/schemas/ruleset.schema.json",
+  "title": "Email Processing Ruleset Schema",
+  "description": "JSON Schema for email processing rules configuration",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "ruleset",
+      "description": "The type identifier for ruleset files"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^v\\d+$",
+      "description": "Version identifier (e.g., 'v2')"
+    },
+    "rules": {
+      "type": "array",
+      "description": "Array of processing rules",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique rule identifier"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable rule description"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Rule execution priority (higher numbers = higher priority)"
+          },
+          "when": {
+            "type": "array",
+            "description": "Conditions that must be met for rule to apply",
+            "items": {
+              "type": "object",
+              "properties": {
+                "allOf": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "description": "JSONPath to the value being tested"
+                      },
+                      "op": {
+                        "type": "string",
+                        "enum": ["exists", "eq", "in", "lt", "lte", "gt", "gte", "regex"],
+                        "description": "Comparison operator"
+                      },
+                      "value": {
+                        "description": "Value to compare against (type varies by operator)"
+                      }
+                    },
+                    "required": ["path", "op"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "then": {
+            "type": "array",
+            "description": "Actions to execute when conditions are met",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Action type"
+                },
+                "params": {
+                  "type": "object",
+                  "description": "Action parameters"
+                }
+              },
+              "required": ["type"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["id", "priority", "when", "then"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["type", "version", "rules"],
+  "additionalProperties": false
+}

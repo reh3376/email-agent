@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://email-agent.local/schemas/taxonomy.schema.json",
+  "title": "Email Classification Taxonomy Schema",
+  "description": "JSON Schema for email classification taxonomy structure",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "email_categories",
+      "description": "The type identifier for taxonomy files"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^v\\d+$",
+      "description": "Version identifier (e.g., 'v2')"
+    },
+    "categories": {
+      "type": "array",
+      "description": "Array of classification categories",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Unique category identifier"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable category name"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this category is required for classification"
+          },
+          "labels": {
+            "type": "array",
+            "description": "Available labels for this category",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": ["id", "name", "required", "labels"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["type", "version", "categories"],
+  "additionalProperties": false
+}

@@ -1,5 +1,7 @@
 {
-  "categories": [  # <note add versioning to this object and type, type = email categories /note>
+  "type": "email_categories",
+  "version": "v2",
+  "categories": [
     {
       "id": 0,
       "name": "reviewed",
@@ -9,7 +11,7 @@
       ]
     },
     {
-      "id": 1,    # <note add
+      "id": 1,
       "name": "type",
       "required": true,
       "labels": [

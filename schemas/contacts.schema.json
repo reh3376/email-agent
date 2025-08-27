@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://email-agent.local/schemas/contacts.schema.json",
+  "title": "Contacts Schema",
+  "description": "JSON Schema for contacts storage",
+  "type": "array",
+  "description": "Array of contact records",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique contact identifier"
+      },
+      "name": {
+        "type": "object",
+        "properties": {
+          "first": {
+            "type": "string",
+            "minLength": 1
+          },
+          "last": {
+            "type": "string",
+            "minLength": 1
+          },
+          "full": {
+            "type": "string",
+            "description": "Full display name"
+          }
+        },
+        "required": ["first", "last"]
+      },
+      "emails": {
+        "type": "array",
+        "description": "Email addresses associated with this contact",
+        "items": {
+          "type": "object",
+          "properties": {
+            "address": {
+              "type": "string",
+              "format": "email"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["work", "personal", "other"]
+            },
+            "primary": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": ["address"]
+        },
+        "minItems": 1
+      },
+      "phones": {
+        "type": "array",
+        "description": "Phone numbers associated with this contact",
+        "items": {
+          "type": "object",
+          "properties": {
+            "number": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["mobile", "work", "home", "other"]
+            },
+            "primary": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": ["number"]
+        }
+      },
+      "addresses": {
+        "type": "array",
+        "description": "Physical addresses associated with this contact",
+        "items": {
+          "type": "object",
+          "properties": {
+            "street": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "zip": {
+              "type": "string"
+            },
+            "country": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["work", "home", "other"]
+            }
+          }
+        }
+      },
+      "organization": {
+        "type": "string",
+        "description": "Organization or company name"
+      },
+      "title": {
+        "type": "string",
+        "description": "Job title or role"
+      },
+      "created": {
+        "type": "string",
+        "format": "date-time",
+        "description": "When this contact was created"
+      },
+      "updated": {
+        "type": "string",
+        "format": "date-time",
+        "description": "When this contact was last updated"
+      },
+      "tags": {
+        "type": "array",
+        "description": "Tags for categorizing contacts",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      }
+    },
+    "required": ["id", "name", "emails"],
+    "additionalProperties": false
+  }
+}

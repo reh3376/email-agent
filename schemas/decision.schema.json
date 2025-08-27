@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://email-agent.local/schemas/decision.schema.json",
+  "title": "Email Processing Decision Schema",
+  "description": "JSON Schema for email processing decision records (NDJSON entries)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique decision identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this decision was made"
+    },
+    "messageId": {
+      "type": "string",
+      "description": "Email message identifier"
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "name": {
+              "type": "string"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "localpart": {
+              "type": "string"
+            }
+          },
+          "required": ["email"]
+        },
+        "to": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": ["email"]
+          }
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "body": {
+          "type": "string",
+          "description": "Email body text"
+        }
+      },
+      "required": ["id", "subject", "from", "date"]
+    },
+    "classification": {
+      "type": "object",
+      "properties": {
+        "category0_reviewed": {
+          "type": "string"
+        },
+        "category1_type": {
+          "type": "string"
+        },
+        "category2_sender_identity": {
+          "type": "string"
+        },
+        "category3_context": {
+          "type": "string"
+        },
+        "category4_handler": {
+          "type": "string"
+        }
+      },
+      "required": ["category0_reviewed", "category1_type", "category2_sender_identity", "category3_context", "category4_handler"]
+    },
+    "rulesMatched": {
+      "type": "array",
+      "description": "Rules that matched for this message",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "matched": {
+            "type": "boolean"
+          }
+        },
+        "required": ["ruleId", "matched"]
+      }
+    },
+    "actions": {
+      "type": "array",
+      "description": "Actions taken on this message",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "required": ["success"]
+          }
+        },
+        "required": ["type"]
+      }
+    },
+    "calendar": {
+      "type": "object",
+      "properties": {
+        "conflict": {
+          "type": "boolean",
+          "description": "Whether this message creates a calendar conflict"
+        },
+        "conflictDetails": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "end": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "title": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "contacts": {
+      "type": "object",
+      "properties": {
+        "sender_in_contacts": {
+          "type": "boolean"
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "properties": {
+        "save_to_folder": {
+          "type": "boolean"
+        },
+        "folder_path": {
+          "type": "string"
+        }
+      }
+    },
+    "flags": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    }
+  },
+  "required": ["id", "timestamp", "messageId", "message", "classification"],
+  "additionalProperties": false
+}
