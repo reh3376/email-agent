@@ -270,3 +270,12 @@ uv run python scripts/train_classifier.py --data data/decisions \
 - Rule editor UI and taxonomy manager in the desktop shell.
 - MCP packaging: register `openapi_3_1.json` in Docker MCP toolkit; expose
   resources `taxonomy_active`, `ruleset_active`, `samples`, `decisions_today`.
+
+---
+
+## 17) Implementation Roadmap
+
+For a detailed phased implementation plan with specific tasks, definitions of done, and test steps, see:
+**[📋 Email Agent Phased Implementation Roadmap](./email-agent_phased_roadmap.md)**
+
+This roadmap provides a systematic approach to evolving the email-agent into a robust, testable, desktop-ready application through 9 phases covering everything from repository hygiene to full desktop deployment.
