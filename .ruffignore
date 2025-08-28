@@ -35,6 +35,9 @@ documentation/
 doc/
 **/doc/
 
+# Specific problematic documentation files
+docs/ai_task_orchestrator.py
+
 # Archive and backup files
 archive/
 

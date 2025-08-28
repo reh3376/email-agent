@@ -5,6 +5,102 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## 🤝 **Collaboration / Dev Onboarding**:
+
+Welcome to the Email Agent project! Before diving into the functional spec, here's what you need to know:
+
+### Getting Started
+
+1. **Clone the repo** into your local environment
+2. **Read [CONTRIBUTING.md](./CONTRIBUTING.md)** for collaboration workflow
+3. **Set up your development branch**: `dev/<your-username>/<feature>`
+   1. All lowercase - dev/<your-github-username>/<feature-description>
+   2. ✅ **Good Examples:**
+      1. `dev/reh3376/ridindirty`
+      2. `dev/janesmith/bug-fixer`
+      3. `dev/bobcat69/api-build`
+4. **Install dependencies**: /Users/reh3376/repos/email-agent/pyproject.toml
+
+   ```bash
+   uv venv && source .venv/bin/activate
+   uv pip install -e ".[dev]"
+   ```
+
+5. **Set up pre-commit hooks** (required):
+
+   ```bash
+   uv run python scripts/setup_pre_commit.py
+   ```
+
+6. **Run the API locally**: `uv run python scripts/run_api.py`
+
+### Developer Tools & Commands
+
+**Branch Management:**
+
+```bash
+# Create a properly named branch
+uv run python scripts/developer_tools.py branch <username> <feature>
+
+# Check if your branch is ready for PR
+uv run python scripts/developer_tools.py check
+
+# Sync your branch with latest main
+uv run python scripts/developer_tools.py sync
+```
+
+**Code Quality:**
+
+```bash
+# Check linting (0 errors, <50 warnings required)
+uv run python scripts/check_linting.py
+
+# Run tests
+uv run pytest
+
+# Format code
+uv run ruff format .
+
+# Fix auto-fixable linting issues
+uv run ruff check --fix .
+```
+
+**Commit Guidelines:**
+
+```bash
+# Validate commit message (must be >15 words)
+uv run python scripts/developer_tools.py validate-msg
+
+# Emergency commit bypass (use sparingly!)
+git commit --no-verify -m "Emergency: detailed explanation of critical fix..."
+```
+
+### Key Development Principles
+
+- **Modular Python Architecture**: Keep components isolated and testable
+- **Full Stack Python**: FastAPI backend, future desktop UI (likely Electron/Tauri with Python bridge)
+- **Commit Messages**: Must be descriptive (>15 words) explaining the "why"
+- **Small PRs**: Frequent, focused pull requests are preferred
+- **Linting**: Zero errors allowed, <50 warnings total
+- **Branch Cleanup**: Auto-delete head branches after successful merge (keeps repo clean)
+
+### Code Quality Standards
+
+- All code must pass `ruff check` with no errors
+- Type hints required for all function signatures
+- Docstrings for all public functions/classes
+- Tests for new functionality (pytest)
+
+### Architecture Overview
+
+- **API-First Design**: Everything goes through the FastAPI layer
+- **JSON Storage**: Schema-validated JSON for configuration
+- **NDJSON Logs**: Append-only decision logs for audit trail
+- **Local ML**: PyTorch classifier augmented by LLM
+- **Graph DB**: Oxigraph for relationship tracking
+
+---
+
 A privacy-focused, offline-first desktop email assistant that runs locally and
 provides intelligent email processing through a FastAPI-based service.
 The assistant classifies emails, applies rule-based actions, manages contacts,
