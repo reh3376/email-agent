@@ -106,16 +106,16 @@ def setup_pre_commit():
     print("🔧 Setting up pre-commit hooks for Email Agent...")
 
     # Check if we're in a git repository
-    if not Path('.git').exists():
+    if not Path(".git").exists():
         print("❌ Error: Not in a git repository root")
         return 1
 
     # Create hooks directory if it doesn't exist
-    hooks_dir = Path('.git/hooks')
+    hooks_dir = Path(".git/hooks")
     hooks_dir.mkdir(exist_ok=True)
 
     # Write pre-commit hook
-    hook_path = hooks_dir / 'pre-commit'
+    hook_path = hooks_dir / "pre-commit"
     hook_path.write_text(HOOK_CONTENT)
 
     # Make it executable
@@ -135,7 +135,7 @@ def setup_pre_commit():
 
 def remove_pre_commit():
     """Remove pre-commit hook."""
-    hook_path = Path('.git/hooks/pre-commit')
+    hook_path = Path(".git/hooks/pre-commit")
     if hook_path.exists():
         hook_path.unlink()
         print("✅ Pre-commit hook removed")
@@ -145,7 +145,7 @@ def remove_pre_commit():
 
 def main():
     """Main entry point."""
-    if len(sys.argv) > 1 and sys.argv[1] == '--remove':
+    if len(sys.argv) > 1 and sys.argv[1] == "--remove":
         remove_pre_commit()
     else:
         return setup_pre_commit()

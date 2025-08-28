@@ -23,18 +23,18 @@ def count_issues(output: str) -> tuple[int, int]:
     warnings = 0
 
     # Ruff output format: filename:line:col: CODE message
-    for line in output.strip().split('\n'):
-        if not line or line.startswith('Found'):
+    for line in output.strip().split("\n"):
+        if not line or line.startswith("Found"):
             continue
 
         # Check if it's an error (E) or warning (W) or other
-        if ': E' in line:
+        if ": E" in line:
             errors += 1
-        elif ': W' in line or ': ' in line:  # Most issues are warnings
+        elif ": W" in line or ": " in line:  # Most issues are warnings
             warnings += 1
 
     # Also check the summary line
-    summary_match = re.search(r'Found (\d+) error', output)
+    summary_match = re.search(r"Found (\d+) error", output)
     if summary_match:
         errors = max(errors, int(summary_match.group(1)))
 
@@ -47,11 +47,7 @@ def main():
     print("-" * 50)
 
     # Run ruff check
-    result = subprocess.run(
-        ['uv', 'run', 'ruff', 'check', '.'],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["uv", "run", "ruff", "check", "."], capture_output=True, text=True)
 
     # Parse output
     output = result.stdout + result.stderr
