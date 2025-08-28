@@ -20,12 +20,12 @@ def create_branch(username: str, feature: str):
     )
 
     if result.stdout.strip():
-        print(f"❌ Branch '{branch_name}' already exists")
+        print(f"ERROR: Branch '{branch_name}' already exists")
         return 1
 
     # Create and checkout branch
     subprocess.run(["git", "checkout", "-b", branch_name])
-    print(f"✅ Created and checked out branch: {branch_name}")
+    print(f"SUCCESS: Created and checked out branch: {branch_name}")
     print("\nNext steps:")
     print("1. Make your changes")
     print("2. Commit with descriptive messages (>15 words)")
@@ -37,7 +37,7 @@ def create_branch(username: str, feature: str):
 
 def check_pr_ready():
     """Check if current branch is ready for PR."""
-    print("🔍 Checking PR readiness...")
+    print("Checking PR readiness...")
 
     issues = []
 
@@ -66,11 +66,11 @@ def check_pr_ready():
         issues.append("Some tests are failing")
 
     if issues:
-        print("\n❌ Not ready for PR:")
+        print("\nNOT READY for PR:")
         for issue in issues:
             print(f"   • {issue}")
     else:
-        print("\n✅ Ready for PR!")
+        print("\nREADY for PR!")
         print(f"\nCreate PR at: https://github.com/reh3376/email-agent/compare/main...{branch}")
 
     return len(issues)
@@ -78,14 +78,14 @@ def check_pr_ready():
 
 def sync_with_main():
     """Sync current branch with latest main."""
-    print("🔄 Syncing with main...")
+    print("Syncing with main...")
 
     # Save current branch
     result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
     current_branch = result.stdout.strip()
 
     if not current_branch.startswith("dev/"):
-        print("❌ Must be on a dev branch to sync")
+        print("ERROR: Must be on a dev branch to sync")
         return 1
 
     # Fetch latest
@@ -96,10 +96,10 @@ def sync_with_main():
     result = subprocess.run(["git", "merge", "origin/main"])
 
     if result.returncode != 0:
-        print("\n⚠️  Merge conflicts detected!")
+        print("\nWARNING: Merge conflicts detected!")
         print("Please resolve conflicts and commit the merge.")
     else:
-        print("✅ Successfully synced with main")
+        print("SUCCESS: Successfully synced with main")
 
     return result.returncode
 
@@ -114,11 +114,11 @@ def validate_commit_msg(message: str = None):
     words = len(message.split())
 
     if words < 15:
-        print(f"❌ Commit message too short: {words} words (minimum 15)")
+        print(f"ERROR: Commit message too short: {words} words (minimum 15)")
         print(f"   Message: {message}")
         return 1
     else:
-        print(f"✅ Commit message OK: {words} words")
+        print(f"SUCCESS: Commit message OK: {words} words")
         return 0
 
 

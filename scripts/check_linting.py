@@ -43,7 +43,7 @@ def count_issues(output: str) -> tuple[int, int]:
 
 def main():
     """Run linting checks and enforce standards."""
-    print("🔍 Running linting checks...")
+    print("Running linting checks...")
     print("-" * 50)
 
     # Run ruff check
@@ -54,28 +54,28 @@ def main():
     errors, warnings = count_issues(output)
 
     # Print results
-    print("\n📊 Linting Results:")
+    print("\nLinting Results:")
     print(f"   Errors:   {errors}")
     print(f"   Warnings: {warnings}")
     print(f"   Total:    {errors + warnings}")
 
     # Check against thresholds
-    print("\n📏 Thresholds:")
+    print("\nThresholds:")
     print("   Max Errors:   0")
     print("   Max Warnings: 49")
 
     # Determine status and exit accordingly
     if errors > 0:
-        print(f"\n❌ FAILED: {errors} linting errors found (0 allowed)")
+        print(f"\nFAILED: {errors} linting errors found (0 allowed)")
         print("\nPlease fix all errors before submitting a PR.")
         print("\nRun 'uv run ruff check --fix .' to auto-fix some issues.")
         return 1
     elif warnings >= 50:
-        print(f"\n❌ FAILED: {warnings} warnings exceed threshold (49 max)")
+        print(f"\nFAILED: {warnings} warnings exceed threshold (49 max)")
         print("\nPlease reduce warnings before submitting a PR.")
         return 2
     else:
-        print(f"\n✅ PASSED: No errors, {warnings} warnings (under threshold)")
+        print(f"\nPASSED: No errors, {warnings} warnings (under threshold)")
         return 0
 
 

@@ -39,7 +39,7 @@ def check_commit_message():
     words = len(msg.split())
 
     if words < 15:
-        print(f"❌ Commit message too short: {words} words (minimum 15)")
+        print(f"ERROR: Commit message too short: {words} words (minimum 15)")
         print(f"   Current message: {msg}")
         print("\\nPlease write a more descriptive commit message explaining "
               "WHY you made these changes.")
@@ -62,7 +62,7 @@ def run_linting():
     if not py_files:
         return True
 
-    print(f"🔍 Checking {len(py_files)} Python files...")
+    print(f"Checking {len(py_files)} Python files...")
 
     # Run ruff on staged files only
     result = subprocess.run(
@@ -72,7 +72,7 @@ def run_linting():
     )
 
     if result.returncode != 0:
-        print("❌ Linting errors found in staged files:")
+        print("ERROR: Linting errors found in staged files:")
         print(result.stdout)
         print("\\nRun 'uv run ruff check --fix' to auto-fix some issues.")
         return False
@@ -82,7 +82,7 @@ def run_linting():
 
 def main():
     """Run all pre-commit checks."""
-    print("🚀 Running pre-commit checks...")
+    print("Running pre-commit checks...")
 
     # Check commit message length
     if not check_commit_message():
@@ -92,7 +92,7 @@ def main():
     if not run_linting():
         return 1
 
-    print("✅ All pre-commit checks passed!")
+    print("SUCCESS: All pre-commit checks passed!")
     return 0
 
 
@@ -103,11 +103,11 @@ if __name__ == "__main__":
 
 def setup_pre_commit():
     """Install pre-commit hook."""
-    print("🔧 Setting up pre-commit hooks for Email Agent...")
+    print("Setting up pre-commit hooks for Email Agent...")
 
     # Check if we're in a git repository
     if not Path(".git").exists():
-        print("❌ Error: Not in a git repository root")
+        print("ERROR: Not in a git repository root")
         return 1
 
     # Create hooks directory if it doesn't exist
@@ -121,7 +121,7 @@ def setup_pre_commit():
     # Make it executable
     hook_path.chmod(0o755)
 
-    print("✅ Pre-commit hook installed successfully!")
+    print("SUCCESS: Pre-commit hook installed successfully!")
     print("\nThe hook will automatically:")
     print("  • Check commit messages are at least 15 words")
     print("  • Run linting on staged Python files")
@@ -138,7 +138,7 @@ def remove_pre_commit():
     hook_path = Path(".git/hooks/pre-commit")
     if hook_path.exists():
         hook_path.unlink()
-        print("✅ Pre-commit hook removed")
+        print("SUCCESS: Pre-commit hook removed")
     else:
         print("ℹ️  No pre-commit hook found")
 
