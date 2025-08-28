@@ -18,7 +18,54 @@ Welcome to the Email Agent project! Before diving into the functional spec, here
    uv pip install -e ".[dev]"
    ```
 
-5. **Run the API locally**: `uv run python scripts/run_api.py`
+5. **Set up pre-commit hooks** (required):
+
+   ```bash
+   uv run python scripts/setup_pre_commit.py
+   ```
+
+6. **Run the API locally**: `uv run python scripts/run_api.py`
+
+### Developer Tools & Commands
+
+**Branch Management:**
+
+```bash
+# Create a properly named branch
+uv run python scripts/developer_tools.py branch <username> <feature>
+
+# Check if your branch is ready for PR
+uv run python scripts/developer_tools.py check
+
+# Sync your branch with latest main
+uv run python scripts/developer_tools.py sync
+```
+
+**Code Quality:**
+
+```bash
+# Check linting (0 errors, <50 warnings required)
+uv run python scripts/check_linting.py
+
+# Run tests
+uv run pytest
+
+# Format code
+uv run ruff format .
+
+# Fix auto-fixable linting issues
+uv run ruff check --fix .
+```
+
+**Commit Guidelines:**
+
+```bash
+# Validate commit message (must be >15 words)
+uv run python scripts/developer_tools.py validate-msg
+
+# Emergency commit bypass (use sparingly!)
+git commit --no-verify -m "Emergency: detailed explanation of critical fix..."
+```
 
 ### Key Development Principles
 
@@ -27,6 +74,7 @@ Welcome to the Email Agent project! Before diving into the functional spec, here
 - **Commit Messages**: Must be descriptive (>15 words) explaining the "why"
 - **Small PRs**: Frequent, focused pull requests are preferred
 - **Linting**: Zero errors allowed, <50 warnings total
+- **Branch Cleanup**: Auto-delete head branches after successful merge (keeps repo clean)
 
 ### Code Quality Standards
 

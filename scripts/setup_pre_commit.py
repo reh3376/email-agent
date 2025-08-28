@@ -2,14 +2,16 @@
 """
 Pre-commit Hooks Setup Script
 
-This script helps developers set up pre-commit hooks to catch issues before committing.
+This script sets up REQUIRED pre-commit hooks for the Email Agent project.
 Pre-commit hooks run automatically before each commit to ensure code quality.
 
 Benefits:
 - Catch linting errors before they reach the repository
-- Ensure commit messages meet minimum length requirement
-- Format code automatically
-- Run quick tests on changed files
+- Ensure commit messages meet minimum length requirement (>15 words)
+- Prevent non-compliant code from entering the codebase
+- Maintain consistent code quality across all contributors
+
+Note: These hooks are REQUIRED for all developers on this project.
 """
 
 import sys

@@ -78,6 +78,21 @@ fi
 # Clean up
 rm -f /tmp/dev-branch-ruleset.json
 
+# Enable auto-delete head branches
+echo "Enabling auto-delete head branches..."
+gh api \
+  --method PATCH \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  /repos/$REPO \
+  -f delete_branch_on_merge=true
+
+if [ $? -eq 0 ]; then
+    echo "✅ Auto-delete head branches enabled"
+else
+    echo "❌ Failed to enable auto-delete head branches"
+fi
+
 echo ""
 echo "Branch protection setup complete!"
 echo ""
@@ -90,5 +105,8 @@ echo "   - No direct pushes allowed"
 echo ""
 echo "2. Developer branches must follow pattern:"
 echo "   - dev/<username>/<feature-name>"
+echo ""
+echo "3. Repository settings:"
+echo "   - Auto-delete head branches after merge: ENABLED"
 echo ""
 echo "See docs/CONTRIBUTING.md for detailed workflow instructions."

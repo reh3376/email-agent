@@ -2,15 +2,17 @@
 
 ## What is "Auto-delete head branches after merge"?
 
-When you create a pull request, you work on a "feature branch" (e.g., `dev/johndoe/add-filter`). 
+When you create a pull request, you work on a "feature branch" (e.g., `dev/johndoe/add-filter`).
 When this PR is merged into `main`, the feature branch still exists on GitHub.
 
 **Auto-delete head branches** means:
+
 - After your PR is merged, GitHub automatically deletes the feature branch
 - This keeps the repository clean (no old branches cluttering things up)
 - Your local copy remains untouched - you can delete it manually
 
 **Benefits:**
+
 - Cleaner repository with only active branches
 - Less confusion about which branches are still being worked on
 - Encourages the pattern of: branch → work → merge → start fresh
@@ -49,12 +51,14 @@ uv run python scripts/setup_pre_commit.py --remove
 ### Emergency Bypass:
 
 If you absolutely need to commit without checks:
+
 ```bash
 git commit --no-verify -m "Emergency fix: detailed explanation here..."
 ```
 
 **My Recommendation:** Pre-commit hooks are valuable for maintaining code quality.
 They're especially helpful for:
+
 - New developers learning the standards
 - Catching simple mistakes before they waste CI time
 - Ensuring consistent commit messages

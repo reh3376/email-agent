@@ -55,6 +55,15 @@ Use this checklist when configuring branch protection in GitHub settings.
 - This enforces `dev/<username>/<feature>` naming
 - Set to `Evaluate` to warn, `Active` to block
 
+## Repository Settings
+
+### General Settings
+- [ ] Go to Settings → General
+- [ ] Scroll to "Pull Requests" section
+- [ ] ✅ Enable "Automatically delete head branches"
+  - This deletes feature branches after merge
+  - Keeps repository clean and organized
+
 ## Post-Setup Tasks
 
 - [ ] Test protection by trying direct push (should fail)

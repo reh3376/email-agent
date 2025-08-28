@@ -111,9 +111,13 @@ All PRs must pass:
    uv venv
    uv pip install -e ".[dev]"
    ```
-4. Create your developer branch
-5. Make your changes
-6. Submit a PR
+4. Install pre-commit hooks (required):
+   ```bash
+   uv run python scripts/setup_pre_commit.py
+   ```
+5. Create your developer branch
+6. Make your changes
+7. Submit a PR
 
 ## Questions?
 
