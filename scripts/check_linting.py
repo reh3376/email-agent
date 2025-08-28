@@ -68,7 +68,7 @@ def main():
     print("   Max Errors:   0")
     print("   Max Warnings: 49")
 
-    # Determine status
+    # Determine status and exit accordingly
     if errors > 0:
         print(f"\n❌ FAILED: {errors} linting errors found (0 allowed)")
         print("\nPlease fix all errors before submitting a PR.")
