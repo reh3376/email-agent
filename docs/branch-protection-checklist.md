@@ -58,6 +58,7 @@ Use this checklist when configuring branch protection in GitHub settings.
 ## Repository Settings
 
 ### General Settings
+
 - [ ] Go to Settings → General
 - [ ] Scroll to "Pull Requests" section
 - [ ] ✅ Enable "Automatically delete head branches"

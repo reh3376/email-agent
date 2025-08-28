@@ -2,74 +2,14 @@
 
 _Last updated: 2025-08-27_
 
-## 👥 Developer Onboarding
+# Welcome to the Email Agent project! Before diving into the functional spec, here's what you need to know:
 
-Welcome to the Email Agent project! Before diving into the functional spec, here's what you need to know:
-
-### Getting Started
-
-1. **Clone the repo** into your local environment
-2. **Read [CONTRIBUTING.md](./CONTRIBUTING.md)** for collaboration workflow
-3. **Set up your development branch**: `dev/<your-username>/<feature>`
-4. **Install dependencies**:
-
-   ```bash
-   uv venv && source .venv/bin/activate
-   uv pip install -e ".[dev]"
-   ```
-
-5. **Set up pre-commit hooks** (required):
-
-   ```bash
-   uv run python scripts/setup_pre_commit.py
-   ```
-
-6. **Run the API locally**: `uv run python scripts/run_api.py`
-
-### Developer Tools & Commands
-
-**Branch Management:**
-
-```bash
-# Create a properly named branch
-uv run python scripts/developer_tools.py branch <username> <feature>
-
-# Check if your branch is ready for PR
-uv run python scripts/developer_tools.py check
-
-# Sync your branch with latest main
-uv run python scripts/developer_tools.py sync
-```
-
-**Code Quality:**
-
-```bash
-# Check linting (0 errors, <50 warnings required)
-uv run python scripts/check_linting.py
-
-# Run tests
-uv run pytest
-
-# Format code
-uv run ruff format .
-
-# Fix auto-fixable linting issues
-uv run ruff check --fix .
-```
-
-**Commit Guidelines:**
-
-```bash
-# Validate commit message (must be >15 words)
-uv run python scripts/developer_tools.py validate-msg
-
-# Emergency commit bypass (use sparingly!)
-git commit --no-verify -m "Emergency: detailed explanation of critical fix..."
-```
+**HAVE FUN!**: thats all!
 
 ### Key Development Principles
 
 - **Modular Python Architecture**: Keep components isolated and testable
+- **Review Developer Onboarding**: starting on line 3ish of /Users/reh3376/repos/email-agent/README.md
 - **Full Stack Python**: FastAPI backend, future desktop UI (likely Electron/Tauri with Python bridge)
 - **Commit Messages**: Must be descriptive (>15 words) explaining the "why"
 - **Small PRs**: Frequent, focused pull requests are preferred
