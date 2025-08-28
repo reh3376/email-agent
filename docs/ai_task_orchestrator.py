@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Add current directory to path for imports
 sys.path.append(str(Path(__file__).parent))
@@ -110,7 +110,7 @@ class TaskProgressUpdate:
     percentage: float
     status: str
     elapsed_time: float
-    details: Dict[str, Any]
+    details: dict[str, Any]
     timestamp: datetime
 
 
@@ -129,7 +129,7 @@ class AITaskOrchestrator:
     - Production deployment readiness
     """
 
-    def __init__(self, project_root: Optional[str] = None,
+    def __init__(self, project_root: str | None = None,
                  enable_memory_integration: bool = True,
                  enable_all_features: bool = False,
                  production_mode: bool = False):
@@ -214,7 +214,7 @@ class AITaskOrchestrator:
         random_suffix = hashlib.md5(str(time.time()).encode()).hexdigest()[:6]
         return f"task_{timestamp}_{random_suffix}"
 
-    def analyze_task(self, task_description: str) -> Dict[str, Any]:
+    def analyze_task(self, task_description: str) -> dict[str, Any]:
         """
         Enhanced task analysis with domain awareness and memory integration.
 
@@ -298,14 +298,15 @@ class AITaskOrchestrator:
 
         if any(term in desc_lower for term in ["ml", "neural", "machine learning", "adaptive ml"]):
             return ControlSystemComplexity.ML_ENHANCED
-        elif any(term in desc_lower for term in ["mpc", "model predictive", "constraint", "horizon"]):
+        elif any(term in desc_lower for term in
+                ["mpc", "model predictive", "constraint", "horizon"]):
             return ControlSystemComplexity.MPC_ADVANCED
         elif any(term in desc_lower for term in ["cascade", "multi-loop", "primary secondary"]):
             return ControlSystemComplexity.CASCADE_CONTROL
         else:
             return ControlSystemComplexity.BASIC_PID
 
-    def analyze_control_task(self, task_description: str) -> Dict[str, Any]:
+    def analyze_control_task(self, task_description: str) -> dict[str, Any]:
         """Specialized analysis for control system tasks"""
         control_analysis = {
             "control_type": self._assess_control_complexity(task_description).value,
@@ -323,7 +324,7 @@ class AITaskOrchestrator:
 
         return control_analysis
 
-    def _identify_safety_requirements(self, task_description: str) -> List[str]:
+    def _identify_safety_requirements(self, task_description: str) -> list[str]:
         """Identify safety requirements for control systems"""
         safety_reqs = []
 
@@ -344,7 +345,7 @@ class AITaskOrchestrator:
 
         return safety_reqs
 
-    def _identify_performance_targets(self, task_description: str) -> Dict[str, Any]:
+    def _identify_performance_targets(self, task_description: str) -> dict[str, Any]:
         """Identify performance targets for control systems"""
         targets = {
             "settling_time": "< 10 seconds",
@@ -364,7 +365,7 @@ class AITaskOrchestrator:
 
         return targets
 
-    def _recommend_control_algorithms(self, task_description: str) -> List[str]:
+    def _recommend_control_algorithms(self, task_description: str) -> list[str]:
         """Recommend control algorithms based on task"""
         algorithms = []
 
@@ -390,7 +391,9 @@ class AITaskOrchestrator:
             try:
                 return self._assess_complexity_ml(task_description).value
             except Exception as e:
-                logger.warning(f"ML complexity assessment failed: {e}, falling back to keyword-based")
+                logger.warning(
+                    f"ML complexity assessment failed: {e}, falling back to keyword-based"
+                )
 
         # Complexity indicators
         extensive_indicators = [
@@ -422,16 +425,24 @@ class AITaskOrchestrator:
         else:
             return TaskComplexity.SIMPLE
 
-    def _extract_requirements(self, task_description: str) -> List[str]:
+    def _extract_requirements(self, task_description: str) -> list[str]:
         """Enhanced requirement extraction with domain awareness."""
         requirements = []
 
         # File format requirements
-        formats = re.findall(r'\b(L5X|ACD|JSON|CSV|XML|YAML|SQL)\b', task_description, re.IGNORECASE)
+        formats = re.findall(
+            r'\b(L5X|ACD|JSON|CSV|XML|YAML|SQL)\b',
+            task_description,
+            re.IGNORECASE
+        )
         requirements.extend([f"Support for {fmt} format" for fmt in formats])
 
         # Programming language requirements
-        languages = re.findall(r'\b(Python|TypeScript|JavaScript|Java|C\+\+|SQL|Cypher)\b', task_description, re.IGNORECASE)
+        languages = re.findall(
+            r'\b(Python|TypeScript|JavaScript|Java|C\+\+|SQL|Cypher)\b',
+            task_description,
+            re.IGNORECASE
+        )
         requirements.extend([f"Implementation in {lang}" for lang in languages])
 
         # Functionality requirements
@@ -459,7 +470,7 @@ class AITaskOrchestrator:
 
         return list(set(requirements)) or ["Basic functionality implementation"]
 
-    def _identify_resources_enhanced(self, task_description: str) -> Dict[str, Any]:
+    def _identify_resources_enhanced(self, task_description: str) -> dict[str, Any]:
         """Enhanced resource identification with memory system integration."""
         resources = {
             "knowledge_graph": [],
@@ -511,7 +522,7 @@ class AITaskOrchestrator:
 
         return resources
 
-    async def _find_similar_implementations(self, task_description: str) -> List[Dict[str, Any]]:
+    async def _find_similar_implementations(self, task_description: str) -> list[dict[str, Any]]:
         """Find similar implementations from memory system"""
         if not self.memory_coordinator:
             return []
@@ -550,7 +561,7 @@ class AITaskOrchestrator:
         desc_lower = task_description.lower()
         return any(keyword in desc_lower for keyword in math_keywords)
 
-    def get_mathematical_context(self) -> Dict[str, Any]:
+    def get_mathematical_context(self) -> dict[str, Any]:
         """Get mathematical context from WolframAlpha Pro"""
         if not self.wolfram_validator:
             return {"available": False}
@@ -561,7 +572,7 @@ class AITaskOrchestrator:
             logger.warning(f"Failed to get mathematical context: {e}")
             return {"available": False, "error": str(e)}
 
-    def _identify_risks(self, task_description: str) -> List[str]:
+    def _identify_risks(self, task_description: str) -> list[str]:
         """Enhanced risk identification with domain awareness."""
         risks = []
 
@@ -605,7 +616,7 @@ class AITaskOrchestrator:
 
         return risks or ["Minimal risks identified"]
 
-    def _define_validation_criteria(self, task_description: str) -> List[str]:
+    def _define_validation_criteria(self, task_description: str) -> list[str]:
         """Enhanced validation criteria with multi-tier approach."""
         criteria = [
             "Code compiles/runs without syntax errors",
@@ -652,7 +663,7 @@ class AITaskOrchestrator:
 
         return criteria
 
-    def _estimate_effort(self, task_description: str) -> Dict[str, Any]:
+    def _estimate_effort(self, task_description: str) -> dict[str, Any]:
         """Estimate effort required for task completion."""
         complexity = self._assess_complexity(task_description)
 
@@ -665,7 +676,7 @@ class AITaskOrchestrator:
 
         return effort_mapping[complexity]
 
-    def _identify_dependencies(self, task_description: str) -> List[str]:
+    def _identify_dependencies(self, task_description: str) -> list[str]:
         """Identify task dependencies."""
         dependencies = []
 
@@ -687,7 +698,7 @@ class AITaskOrchestrator:
 
         return dependencies or ["No external dependencies identified"]
 
-    def _create_execution_plan_enhanced(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _create_execution_plan_enhanced(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Create enhanced execution plan with memory insights."""
         complexity = analysis["complexity"]
 
@@ -774,7 +785,7 @@ class AITaskOrchestrator:
 
         return base_steps
 
-    def discover_codebase(self, task_description: str) -> Dict[str, Any]:
+    def discover_codebase(self, task_description: str) -> dict[str, Any]:
         """
         Enhanced codebase discovery with memory system integration.
 
@@ -831,7 +842,7 @@ class AITaskOrchestrator:
 
         return discovery
 
-    def _write_similar_implementations_section(self, f, task_analysis: Dict[str, Any]) -> None:
+    def _write_similar_implementations_section(self, f, task_analysis: dict[str, Any]) -> None:
         """Write similar implementations section to file"""
         if task_analysis.get("similar_implementations"):
             f.write("## Similar Implementations Found\n")
@@ -841,7 +852,7 @@ class AITaskOrchestrator:
                 f.write(f"- **Validation Score**: {similar['validation_score']}%\n")
                 f.write(f"- **Path**: `{similar['implementation_path']}`\n\n")
 
-    def _write_control_analysis_section(self, f, task_analysis: Dict[str, Any]) -> None:
+    def _write_control_analysis_section(self, f, task_analysis: dict[str, Any]) -> None:
         """Write control system analysis section to file"""
         if task_analysis.get("control_analysis"):
             f.write("## Control System Analysis\n")
@@ -850,7 +861,7 @@ class AITaskOrchestrator:
             f.write(f"- **Algorithms**: {', '.join(control['algorithms'])}\n")
             f.write(f"- **Safety Requirements**: {len(control['safety_requirements'])} identified\n")
 
-    def _get_validation_tiers(self, validation_tier: str) -> List:
+    def _get_validation_tiers(self, validation_tier: str) -> list:
         """Get validation tiers based on validation level"""
         if validation_tier == "comprehensive" or validation_tier == "production":
             return list(ValidationTier)
@@ -858,7 +869,7 @@ class AITaskOrchestrator:
             return [ValidationTier.SYNTAX, ValidationTier.REQUIREMENTS,
                    ValidationTier.MATHEMATICAL, ValidationTier.PERFORMANCE]
 
-    def _execute_validation_tiers(self, tiers: List, code_content: str, requirements: List[str]) -> Dict[str, Any]:
+    def _execute_validation_tiers(self, tiers: list, code_content: str, requirements: list[str]) -> dict[str, Any]:
         """Execute validation for each tier"""
         tier_results = {}
 
@@ -882,7 +893,7 @@ class AITaskOrchestrator:
 
         return tier_results
 
-    async def _get_memory_insights(self, task_description: str) -> Dict[str, Any]:
+    async def _get_memory_insights(self, task_description: str) -> dict[str, Any]:
         """Get insights from memory system"""
         insights = {
             "neo4j_patterns": [],
@@ -925,7 +936,7 @@ class AITaskOrchestrator:
                 "error": str(e)
             }
 
-    def _extract_keywords(self, text: str) -> List[str]:
+    def _extract_keywords(self, text: str) -> list[str]:
         """Extract relevant keywords from text."""
         # Common PLC/automation keywords
         domain_keywords = [
@@ -955,7 +966,7 @@ class AITaskOrchestrator:
 
         return list(set(found_keywords))
 
-    def _find_relevant_files(self, keywords: List[str]) -> List[Dict[str, Any]]:
+    def _find_relevant_files(self, keywords: list[str]) -> list[dict[str, Any]]:
         """Find files relevant to the task."""
         relevant_files = []
 
@@ -985,7 +996,7 @@ class AITaskOrchestrator:
 
         return relevant_files[:20]  # Limit total results
 
-    def _analyze_code_patterns(self) -> List[Dict[str, Any]]:
+    def _analyze_code_patterns(self) -> list[dict[str, Any]]:
         """Analyze code patterns in relevant files."""
         patterns = []
 
@@ -1019,7 +1030,7 @@ class AITaskOrchestrator:
 
         return patterns[:15]  # Limit total patterns
 
-    def _find_documentation(self, keywords: List[str]) -> List[Dict[str, Any]]:
+    def _find_documentation(self, keywords: list[str]) -> list[dict[str, Any]]:
         """Find relevant documentation."""
         docs = []
 
@@ -1050,7 +1061,7 @@ class AITaskOrchestrator:
 
         return docs[:10]
 
-    def _find_available_tools(self) -> List[Dict[str, Any]]:
+    def _find_available_tools(self) -> list[dict[str, Any]]:
         """Find available tools and scripts."""
         tools = []
 
@@ -1080,7 +1091,7 @@ class AITaskOrchestrator:
 
         return tools[:10]
 
-    def create_context_document(self, task_analysis: Dict[str, Any], discovery: Dict[str, Any]) -> Path:
+    def create_context_document(self, task_analysis: dict[str, Any], discovery: dict[str, Any]) -> Path:
         """
         Create enhanced context document with memory insights and examples.
 
@@ -1197,9 +1208,9 @@ class AITaskOrchestrator:
         logger.info(f"Enhanced context document created: {context_file}")
         return context_file
 
-    def create_implementation_guide(self, task_analysis: Dict[str, Any],
-                                  similar_implementations: List[Dict[str, Any]] = None,
-                                  math_context: Dict[str, Any] = None) -> Path:
+    def create_implementation_guide(self, task_analysis: dict[str, Any],
+                                  similar_implementations: list[dict[str, Any]] = None,
+                                  math_context: dict[str, Any] = None) -> Path:
         """Create comprehensive implementation guide with examples"""
         guide_file = self.temp_dir / f"{self.task_id}_implementation_guide.html"
 
@@ -1267,8 +1278,8 @@ class AITaskOrchestrator:
 
         return guide_file
 
-    def validate_output(self, code_content: str, requirements: List[str],
-                       validation_tier: str = "standard") -> Dict[str, Any]:
+    def validate_output(self, code_content: str, requirements: list[str],
+                       validation_tier: str = "standard") -> dict[str, Any]:
         """
         Enhanced multi-tier validation with specialized checks.
 
@@ -1344,7 +1355,7 @@ class AITaskOrchestrator:
         logger.info(f"Validation completed: {validation['overall_score']}% score")
         return validation
 
-    def _validate_syntax(self, code_content: str) -> Dict[str, Any]:
+    def _validate_syntax(self, code_content: str) -> dict[str, Any]:
         """Validate Python syntax."""
         result = {"status": "pass", "details": [], "score": 100}
 
@@ -1363,7 +1374,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def _validate_requirements(self, code_content: str, requirements: List[str]) -> Dict[str, Any]:
+    def _validate_requirements(self, code_content: str, requirements: list[str]) -> dict[str, Any]:
         """Validate code against requirements."""
         result = {"status": "pass", "details": [], "score": 100}
 
@@ -1379,10 +1390,10 @@ class AITaskOrchestrator:
 
         return result
 
-    def _check_all_requirements(self, code_lower: str, requirements: List[str]) -> List[str]:
+    def _check_all_requirements(self, code_lower: str, requirements: list[str]) -> list[str]:
         """Check all requirements and return list of missing ones."""
         missing_requirements = []
-        
+
         # Define requirement checkers
         checkers = [
             ("error handling", self._check_error_handling),
@@ -1390,44 +1401,44 @@ class AITaskOrchestrator:
             ("documentation", self._check_documentation),
             ("production", self._check_production_features)
         ]
-        
+
         for req in requirements:
             req_lower = req.lower()
-            
+
             # Check standard requirements
             for keyword, checker in checkers:
                 if keyword in req_lower:
                     missing_requirements.extend(checker(code_lower))
                     break
-            
+
             # Special handling for format requirements
             if "format" in req_lower:
                 missing_requirements.extend(self._check_format_support(code_lower, req))
-        
+
         return missing_requirements
 
-    def _check_error_handling(self, code_lower: str) -> List[str]:
+    def _check_error_handling(self, code_lower: str) -> list[str]:
         """Check if error handling is implemented."""
         patterns = ["try:", "except:", "raise", "error", "exception"]
         if not any(pattern in code_lower for pattern in patterns):
             return ["Error handling not implemented"]
         return []
 
-    def _check_testing(self, code_lower: str) -> List[str]:
+    def _check_testing(self, code_lower: str) -> list[str]:
         """Check if testing is implemented."""
         patterns = ["test_", "assert", "unittest", "pytest"]
         if not any(pattern in code_lower for pattern in patterns):
             return ["Testing not implemented"]
         return []
 
-    def _check_documentation(self, code_lower: str) -> List[str]:
+    def _check_documentation(self, code_lower: str) -> list[str]:
         """Check if documentation is present."""
         patterns = ['"""', "'''", "# "]
         if not any(pattern in code_lower for pattern in patterns):
             return ["Documentation not found"]
         return []
 
-    def _check_format_support(self, code_lower: str, requirement: str) -> List[str]:
+    def _check_format_support(self, code_lower: str, requirement: str) -> list[str]:
         """Check if required formats are supported."""
         missing = []
         formats = re.findall(r'\b(L5X|ACD|JSON|XML|CSV)\b', requirement, re.IGNORECASE)
@@ -1436,14 +1447,14 @@ class AITaskOrchestrator:
                 missing.append(f"Support for {fmt} format not found")
         return missing
 
-    def _check_production_features(self, code_lower: str) -> List[str]:
+    def _check_production_features(self, code_lower: str) -> list[str]:
         """Check if production features are implemented."""
         patterns = ["logging", "monitor", "metric", "health"]
         if not any(pattern in code_lower for pattern in patterns):
             return ["Production features not implemented"]
         return []
 
-    def _validate_mathematical_accuracy(self, code_content: str) -> Dict[str, Any]:
+    def _validate_mathematical_accuracy(self, code_content: str) -> dict[str, Any]:
         """Validate mathematical implementations"""
         result = {"status": "pass", "details": [], "score": 100}
 
@@ -1471,7 +1482,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def _validate_performance(self, code_content: str) -> Dict[str, Any]:
+    def _validate_performance(self, code_content: str) -> dict[str, Any]:
         """Validate performance characteristics"""
         result = {"status": "pass", "details": [], "score": 100}
 
@@ -1504,7 +1515,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def _validate_safety_compliance(self, code_content: str) -> Dict[str, Any]:
+    def _validate_safety_compliance(self, code_content: str) -> dict[str, Any]:
         """Validate safety compliance for control systems"""
         result = {"status": "pass", "details": [], "score": 100}
 
@@ -1539,7 +1550,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def _validate_production_readiness(self, code_content: str) -> Dict[str, Any]:
+    def _validate_production_readiness(self, code_content: str) -> dict[str, Any]:
         """Validate production deployment readiness"""
         result = {"status": "pass", "details": [], "score": 100}
 
@@ -1588,9 +1599,7 @@ class AITaskOrchestrator:
         if re.search(r'(?:password|secret|key)\s*=\s*["\'][^"\']+["\']', code_content):
             return False
         # Check for no eval/exec
-        if re.search(r'(?:eval|exec)\s*\(', code_content):
-            return False
-        return True
+        return not re.search(r'(?:eval|exec)\s*\(', code_content)
 
     def _check_documentation_completeness(self, code_content: str) -> bool:
         """Check for documentation completeness"""
@@ -1603,7 +1612,7 @@ class AITaskOrchestrator:
         total_definitions = function_count + class_count
         return docstring_count >= (total_definitions * 0.8)  # 80% documentation coverage
 
-    def _detect_hallucinations(self, code_content: str) -> Dict[str, Any]:
+    def _detect_hallucinations(self, code_content: str) -> dict[str, Any]:
         """Enhanced hallucination detection."""
         result = {"status": "pass", "details": []}
 
@@ -1658,7 +1667,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def _validate_best_practices(self, code_content: str) -> Dict[str, Any]:
+    def _validate_best_practices(self, code_content: str) -> dict[str, Any]:
         """Enhanced best practices validation."""
         result = {"status": "pass", "details": []}
 
@@ -1698,7 +1707,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def execute_task_step(self, step_number: int, execution_plan: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def execute_task_step(self, step_number: int, execution_plan: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Execute a specific step from the execution plan with progress monitoring.
 
@@ -1776,7 +1785,7 @@ class AITaskOrchestrator:
 
         return result
 
-    def _execute_setup_step(self) -> Dict[str, Any]:
+    def _execute_setup_step(self) -> dict[str, Any]:
         """Execute environment setup step."""
         details = []
         memory_queries = 0
@@ -1815,7 +1824,7 @@ class AITaskOrchestrator:
             "memory_queries": memory_queries
         }
 
-    def _execute_discovery_step(self) -> Dict[str, Any]:
+    def _execute_discovery_step(self) -> dict[str, Any]:
         """Execute code discovery step."""
         return {
             "status": "completed",
@@ -1823,7 +1832,7 @@ class AITaskOrchestrator:
             "memory_queries": 1 if self.memory_coordinator else 0
         }
 
-    def _execute_planning_step(self) -> Dict[str, Any]:
+    def _execute_planning_step(self) -> dict[str, Any]:
         """Execute implementation planning step."""
         details = ["Create detailed implementation plan based on analysis and discovery results"]
 
@@ -1836,35 +1845,35 @@ class AITaskOrchestrator:
             "memory_queries": 2 if self.memory_coordinator else 0
         }
 
-    def _execute_context_step(self) -> Dict[str, Any]:
+    def _execute_context_step(self) -> dict[str, Any]:
         """Execute context management step."""
         return {
             "status": "completed",
             "details": ["Context document should be created using create_context_document() method"]
         }
 
-    def _execute_implementation_step(self) -> Dict[str, Any]:
+    def _execute_implementation_step(self) -> dict[str, Any]:
         """Execute implementation step."""
         return {
             "status": "completed",
             "details": ["Implement solution according to plan and requirements"]
         }
 
-    def _execute_testing_step(self) -> Dict[str, Any]:
+    def _execute_testing_step(self) -> dict[str, Any]:
         """Execute testing step."""
         return {
             "status": "completed",
             "details": ["Test implementation and validate using validate_output() method"]
         }
 
-    def _execute_documentation_step(self) -> Dict[str, Any]:
+    def _execute_documentation_step(self) -> dict[str, Any]:
         """Execute documentation step."""
         return {
             "status": "completed",
             "details": ["Document solution and clean up temporary files"]
         }
 
-    def _execute_control_validation_step(self) -> Dict[str, Any]:
+    def _execute_control_validation_step(self) -> dict[str, Any]:
         """Execute control system validation step."""
         return {
             "status": "completed",
@@ -1876,7 +1885,7 @@ class AITaskOrchestrator:
             ]
         }
 
-    def _execute_mathematical_validation_step(self) -> Dict[str, Any]:
+    def _execute_mathematical_validation_step(self) -> dict[str, Any]:
         """Execute mathematical validation step."""
         return {
             "status": "completed",
@@ -1920,7 +1929,7 @@ class AITaskOrchestrator:
 
         return guidance
 
-    def validate_control_implementation(self, code_content: str) -> Dict[str, Any]:
+    def validate_control_implementation(self, code_content: str) -> dict[str, Any]:
         """Specialized validation for control system implementations"""
         validation = {
             "control_validation": True,
@@ -1966,7 +1975,7 @@ class AITaskOrchestrator:
 
         return validation
 
-    def get_production_checklist(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def get_production_checklist(self, analysis: dict[str, Any]) -> dict[str, Any]:
         """Get production deployment checklist"""
         checklist = {
             "requirements": [],
@@ -2015,7 +2024,7 @@ class AITaskOrchestrator:
 
         return checklist
 
-    def validate_production_deployment(self, implementation: str) -> Dict[str, Any]:
+    def validate_production_deployment(self, implementation: str) -> dict[str, Any]:
         """Validate complete implementation for production deployment"""
         # Run comprehensive validation
         validation = self.validate_output(
@@ -2034,7 +2043,7 @@ class AITaskOrchestrator:
             "deployment_recommendation": "Deploy" if ready else "Not ready for deployment"
         }
 
-    def get_session_summary(self) -> Dict[str, Any]:
+    def get_session_summary(self) -> dict[str, Any]:
         """Get enhanced session summary with memory usage."""
         memory_queries = sum(
             log.get("memory_queries", 0)
@@ -2065,7 +2074,7 @@ class AITaskOrchestrator:
             "log": self.session_log
         }
 
-    def enforce_documentation_standards(self, task_id: str, documentation: Dict[str, Any]) -> Dict[str, Any]:
+    def enforce_documentation_standards(self, task_id: str, documentation: dict[str, Any]) -> dict[str, Any]:
         """
         Enforce documentation standards including .md formatting and Mermaid diagrams
 
@@ -2114,7 +2123,7 @@ class AITaskOrchestrator:
 
         return validation_result
 
-    def verify_implementation_success(self, task_id: str, implementation_results: Dict[str, Any]) -> Dict[str, Any]:
+    def verify_implementation_success(self, task_id: str, implementation_results: dict[str, Any]) -> dict[str, Any]:
         """
         Comprehensive success verification with documentation updates
 
@@ -2228,7 +2237,7 @@ class AITaskOrchestrator:
             logger.error(f"Failed to update roadmap: {e}")
             return False
 
-    def link_documents(self, roadmap_section: str, documents: Dict[str, str]) -> bool:
+    def link_documents(self, roadmap_section: str, documents: dict[str, str]) -> bool:
         """
         Add document links to roadmap section
 
@@ -2256,7 +2265,7 @@ class AITaskOrchestrator:
             logger.error(f"Failed to link documents: {e}")
             return False
 
-    def generate_mermaid_diagram(self, workflow: List[Dict[str, Any]]) -> str:
+    def generate_mermaid_diagram(self, workflow: list[dict[str, Any]]) -> str:
         """
         Generate Mermaid diagram for workflow visualization
 
@@ -2299,9 +2308,9 @@ class AITaskOrchestrator:
         except Exception as e:
             logger.warning(f"Cleanup error: {e}")
 
-    def create_completion_summary(self, phase: str, achievements: List[str],
-                                deliverables: List[Dict[str, str]],
-                                validation_results: Dict[str, Any]) -> Path:
+    def create_completion_summary(self, phase: str, achievements: list[str],
+                                deliverables: list[dict[str, str]],
+                                validation_results: dict[str, Any]) -> Path:
         """
         Create standardized completion summary document
 
@@ -2420,7 +2429,7 @@ graph TD
         logger.info(f"Completion summary created: {summary_path}")
         return summary_path
 
-    def complete_task_with_documentation(self, task_results: Dict[str, Any]) -> Dict[str, Any]:
+    def complete_task_with_documentation(self, task_results: dict[str, Any]) -> dict[str, Any]:
         """
         MANDATORY: Complete task with automatic documentation updates
 
@@ -2492,7 +2501,7 @@ graph TD
 
         return validation
 
-    def enforce_documentation_standards_enhanced(self, task_results: Dict[str, Any]) -> Dict[str, Any]:
+    def enforce_documentation_standards_enhanced(self, task_results: dict[str, Any]) -> dict[str, Any]:
         """
         Enhanced documentation standards enforcement with automatic compliance checking
 
@@ -2587,7 +2596,7 @@ class TaskProgressMonitor:
         self.updates = []
 
     def update_progress(self, step: int, total_steps: int,
-                            status: str, details: Dict[str, Any]):
+                            status: str, details: dict[str, Any]):
         """Update progress (would publish to Redis in production)"""
         update = TaskProgressUpdate(
             task_id=self.task_id,
@@ -2606,7 +2615,7 @@ class TaskProgressMonitor:
 class WolframAlphaValidator:
     """Placeholder for WolframAlpha Pro integration"""
 
-    def get_context(self) -> Dict[str, Any]:
+    def get_context(self) -> dict[str, Any]:
         """Get mathematical context (placeholder)"""
         return {
             "available": True,
@@ -2616,7 +2625,7 @@ class WolframAlphaValidator:
             "optimization": ["LQR", "MPC", "H-infinity"]
         }
 
-    def validate_equation(self, equation: str) -> Dict[str, Any]:
+    def validate_equation(self, equation: str) -> dict[str, Any]:
         """Validate equation (placeholder)"""
         return {
             "accuracy": 0.95,
@@ -2627,7 +2636,7 @@ class WolframAlphaValidator:
 class IndustrialControlLLM:
     """Placeholder for specialized LLM integration"""
 
-    def analyze(self) -> Dict[str, Any]:
+    def analyze(self) -> dict[str, Any]:
         """Analyze with specialized model (placeholder)"""
         return {
             "recommendations": ["Use IMC tuning for first-order plus dead time processes"],
@@ -2637,7 +2646,7 @@ class IndustrialControlLLM:
 
 
 # Convenience functions for AI agents
-def analyze_and_plan_task(task_description: str) -> Dict[str, Any]:
+def analyze_and_plan_task(task_description: str) -> dict[str, Any]:
     """
     Enhanced task analysis with memory integration.
 
@@ -2706,8 +2715,8 @@ def analyze_and_plan_task(task_description: str) -> Dict[str, Any]:
         orchestrator.cleanup()
 
 
-def validate_task_completion(code_content: str, requirements: List[str],
-                           validation_tier: str = "standard") -> Dict[str, Any]:
+def validate_task_completion(code_content: str, requirements: list[str],
+                           validation_tier: str = "standard") -> dict[str, Any]:
     """
     Enhanced validation with multi-tier support.
 
@@ -2741,7 +2750,7 @@ def get_task_guidance(task_description: str) -> str:
     return analysis.get('guidance', 'No guidance available')
 
 
-def find_similar_implementations(task_description: str) -> List[Dict[str, Any]]:
+def find_similar_implementations(task_description: str) -> list[dict[str, Any]]:
     """
     Find similar implementations from memory system.
 
@@ -2759,7 +2768,7 @@ def find_similar_implementations(task_description: str) -> List[Dict[str, Any]]:
         orchestrator.cleanup()
 
 
-def complete_task_with_mandatory_documentation(task_results: Dict[str, Any]) -> Dict[str, Any]:
+def complete_task_with_mandatory_documentation(task_results: dict[str, Any]) -> dict[str, Any]:
     """
     MANDATORY convenience function: Complete task with automatic documentation updates
 

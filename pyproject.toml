@@ -147,6 +147,9 @@ extend-exclude = [
   "**/docs/",
   "**/documentation/",
   
+  # Specific problematic documentation files
+  "docs/ai_task_orchestrator.py",
+  
   # Archive and build artifacts
   "archive/",
   "dist/",
