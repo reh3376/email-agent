@@ -34,7 +34,7 @@ dependencies = [
   # Data Processing and Storage
   "pandas>=2.2",
   "orjson>=3.10",
-  "pyoxigraph>=0.3.19",
+  "pyoxigraph>=0.5.6",
   
   # Machine Learning and Scientific Computing
   "torch>=2.2",
