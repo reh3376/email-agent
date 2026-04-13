@@ -56,7 +56,7 @@ dependencies = [
   # Calendar and Time Processing
   "python-dateutil>=2.8",
   "pytz>=2023.3",
-  "icalendar>=5.0",
+  "icalendar>=7.0.3",
   "croniter>=2.0",
   
   # CLI Interface
