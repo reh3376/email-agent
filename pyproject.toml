@@ -54,7 +54,7 @@ dependencies = [
   "email-validator>=2.0",
   
   # Calendar and Time Processing
-  "python-dateutil>=2.8",
+  "python-dateutil>=2.9.0.post0",
   "pytz>=2023.3",
   "icalendar>=5.0",
   "croniter>=2.0",
